@@ -137,7 +137,7 @@ function world:tick(dt)
 end
 
 function world:draw()
-    self:y_sort(self.entities)
+    self:y_sort()
 
     love.graphics.push()
 
@@ -230,7 +230,7 @@ function world:get_current_mouse_world_position()
     return x, y
 end
 
---- @return int x, int y
+--- @return number x, number y
 function world:get_current_mouse_grid_position()
     local x, y = self:get_current_mouse_world_position()
     x = round(x / GRID_SIZE_PX)

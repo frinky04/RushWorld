@@ -20,7 +20,7 @@ function astar_benchmark()
         }, {
             x = finish_x,
             y = finish_y
-        }, 3)
+        })
         if path then
             paths = paths + 1
         end

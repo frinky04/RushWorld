@@ -1,3 +1,9 @@
 {
-  "Lua.diagnostics.globals": ["love", "world", "sprite_component_type"]
+  "Lua.diagnostics.globals": ["love", "world", "sprite_component_type"],
+  "Lua.diagnostics.disable": [
+    "lowercase-global",
+    "deprecated",
+    "inject-field",
+    "undefined-field"
+  ]
 }

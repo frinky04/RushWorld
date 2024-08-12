@@ -1,14 +1,22 @@
+--- @class entity
+--- @field name string name of entity
+--- @field x number x_pos
+--- @field y number y_pos
+--- @field rot number rotation
+--- @field draw_priority number draw_priority
+--- @field is_valid boolean is_valid
+--- @field components table list of components
 local entity = {}
 entity.__index = entity
 
 --- new entity, adds to the default world
 ---@param x number x_pos
 ---@param y number y_pos
----@param name string name of entity 
----@param setup_function function setup function
+---@param name string|nil name of entity 
+---@param setup_function function|nil setup function
 function entity:new(x, y, name, setup_function)
     local self = setmetatable({}, entity)
-    self.name = name
+    self.name = name or "Entity"
 
     self.x = x
     self.y = y
@@ -36,7 +44,7 @@ function entity:add_component(component)
 end
 
 --- func to find all components of a type
----@param class Component
+---@param class component
 ---@return table components
 function entity:find_all_components_of_type(class)
     local components = {}
@@ -49,14 +57,16 @@ function entity:find_all_components_of_type(class)
 end
 
 --- func to find the first component of a type
----@param class Component
----@return table components
+---@param class component
+---@return table|nil components
 function entity:find_component_of_type(class)
     for i, component in ipairs(self.components) do
         if component:is_a(class) then
             return component
         end
     end
+
+    return nil
 end
 
 function entity:find_component(name)

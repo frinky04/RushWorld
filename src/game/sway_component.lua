@@ -14,8 +14,8 @@ setmetatable(sway_component, {
 
 --- new Sway Component
 ---@param entity entity to apply
----@param rotation_max defaults to 0.1
----@param rotation_speed defaults to 1
+---@param rotation_max number|nil to 0.1
+---@param rotation_speed number|nil to 1
 function sway_component:new(entity, rotation_max, rotation_speed)
     local self = component:new(entity)
     setmetatable(self, sway_component)

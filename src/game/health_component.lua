@@ -1,8 +1,11 @@
 -- -- Libs
 local component = require("src.core.component")
 
----- Health Component
--- This component is used to manage general health of an entity. On death, the entity is destroyed.
+--- @class HealthComponent : component
+--- @field health number
+--- @field death_callbacks table
+--- @field last_damaged_by entity
+--- @field entity entity
 local health_component = {}
 health_component.__index = health_component
 
@@ -10,6 +13,10 @@ setmetatable(health_component, {
     __index = component
 })
 
+---comment
+---@param entity entity
+---@param health number
+---@return component health_component
 function health_component:new(entity, health)
     local self = component:new(entity)
     setmetatable(self, health_component)
@@ -21,12 +28,8 @@ function health_component:new(entity, health)
     end
 
     self.name = "Health Component"
-    -- @param table of functions to call when the entity dies {{function, component_calling}, etc}
     self.death_callbacks = {}
-    --- @param the last entity that damaged this entity
     self.last_damaged_by = nil
-
-    --- @param PRIVATE the health of the entity, please avoid changing this directly
     self.health = health or 100
 
     return self

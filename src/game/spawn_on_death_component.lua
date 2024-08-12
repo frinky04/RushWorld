@@ -11,7 +11,7 @@ setmetatable(spawn_on_death_component, {
 })
 
 --- cretes a new spawn on death component
----@param entity the entity to attach to 
+---@param entity entity the entity to attach to 
 ---@param setup_function function to call to setup the new entity
 ---@param spawned_entity_name string name of the entity to spawn
 function spawn_on_death_component:new(entity, setup_function, spawned_entity_name)
@@ -21,7 +21,7 @@ function spawn_on_death_component:new(entity, setup_function, spawned_entity_nam
     self.health_component = entity:find_component_of_type(HealthComponent)
     if not self.health_component then
         print("SpawnOnDeathComponent requires a HealthComponent, removing self")
-        entity:remove_component(self)
+        entity:destroy()
     end
     self.health_component:register_death_callback(self.on_death, self)
 

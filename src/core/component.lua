@@ -1,3 +1,7 @@
+--- @class component
+--- @field entity entity owner of the component
+--- @field name string name of the component
+--- @field enabled boolean whether or not the component is enabled
 local component = {}
 component.__index = component
 
@@ -33,10 +37,6 @@ end
 
 function component:key_input(key, scancode, isrepeat, ispressed)
     -- implement this
-end
-
-function component:__tostring()
-    return self.name
 end
 
 function component:is_a(class)
