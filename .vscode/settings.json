@@ -1,0 +1,3 @@
+{
+  "Lua.diagnostics.globals": ["love", "world", "sprite_component_type"]
+}
