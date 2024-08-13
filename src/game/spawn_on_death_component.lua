@@ -2,7 +2,7 @@
 local component = require("src.core.component")
 
 ---- Spawn On Death Component
--- This component only works if the entity has a health component
+-- This component only works if the entity has a health component. Spawns an entity when the entity dies. executes a setup function on the spawned entity if provided.
 local spawn_on_death_component = {}
 spawn_on_death_component.__index = spawn_on_death_component
 

@@ -120,12 +120,18 @@ function astar:path(start_pos, finish_pos)
     local closed = {}
     local nodes = self:generate_nodes()
 
+
+
     if start_pos.x == finish_pos.x and start_pos.y == finish_pos.y then
         -- just return a path with the start position  
         return {start_pos}
     end
 
     local finish = nodes[finish_pos.y] and nodes[finish_pos.y][finish_pos.x] or nil
+
+    -- set the start an end nodes to walkable
+    nodes[start_pos.y][start_pos.x].walkable = true
+    --nodes[finish_pos.y][finish_pos.x].walkable = true
 
     if not finish or not self:is_walkable(finish_pos.x, finish_pos.y) then
         -- If the finish position is non-walkable, search for the closest walkable tile
@@ -134,6 +140,8 @@ function astar:path(start_pos, finish_pos)
             return {} -- No walkable tile found
         end
     end
+
+    
 
     local start = nodes[start_pos.y][start_pos.x]
 

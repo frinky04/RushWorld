@@ -1,3 +1,6 @@
+--- Utility functions for the engine.
+---@param hex string
+---@return table {number, number, number, number}
 function hexToRGBA(hex)
     -- Ensure the hex code is in the correct format (without #)
     hex = hex:gsub("#", "")
@@ -9,20 +12,25 @@ function hexToRGBA(hex)
     local a = 1.0 -- Default alpha value
 
     -- Return the RGBA values as a table
-    return {r, g, b, a}
+    return { r, g, b, a }
 end
 
--- Checks if the difference between a and b is smaller than epsilon
+---returns if a value is almost equal to another value.
+---@param a number
+---@param b number
+---@param epsilon number
+---@return boolean
 function almost_equals(a, b, epsilon)
     return math.abs(a - b) <= epsilon
 end
 
--- Animates the float value to target over time.
--- @param value current value
--- @param target target value
--- @param delta_t delta time
--- @param rate rate at which we approach.
--- @return whether or not we reached the value (true if we made it)
+---interpolates a value towards a target value.
+---@param value number
+---@param target number
+---@param delta_t number
+---@param rate number
+---@return number value
+---@return boolean reached
 function interp_to(value, target, delta_t, rate)
     rate = rate / world.time_scale
     value = value + (target - value) * (1.0 - math.pow(2.0, -rate * delta_t))
@@ -34,24 +42,23 @@ function interp_to(value, target, delta_t, rate)
     return value, false
 end
 
-function uuid()
-    -- seed random with cpu time
-    math.randomseed(os.clock() * 100000000000)
-    local template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    return string.gsub(template, '[xy]', function(c)
-        local v = (c == 'x') and love.math.random(0, 0xf) or love.math.random(8, 0xb)
-        return string.format('%x', v)
-    end)
-end
-
+---rounds a number to the nearest integer.
+---@param num number
+---@return integer
 function round(num)
     return math.floor(num + 0.5)
 end
 
+---whether or not an entity is valid.
+---@param entity entity
+---@return boolean
 function is_valid(entity)
     return entity and entity.is_valid
 end
 
+---if an entity has a health component, apply damage to it.
+---@param entity entity
+---@param damage number
 function damage_entity(entity, damage)
     health_component = entity:find_component_of_type(HealthComponent)
     if health_component then
@@ -59,6 +66,48 @@ function damage_entity(entity, damage)
     end
 end
 
+---returns a random boolean value.
+---@return boolean
 function random_bool()
     return love.math.random(0, 1) == 1
+end
+
+--- :v2
+
+---returns v2 a + b.
+---@param a any {number, number}
+---@param b any {number, number}
+---@return table {number, number}
+function v2_add(a, b)
+    return { a[1] + b[1], a[2] + b[2] }
+end
+
+---returns v2 a - b.
+---@param a any {number, number}
+---@param b any {number, number}
+---@return table {number, number}
+function v2_sub(a, b)
+    return { a[1] - b[1], a[2] - b[2] }
+end
+
+---returns v2 a * b.
+---@param a any {number, number}
+---@param b any {number, number}
+---@return table {number, number}
+function v2_mul(a, b)
+    return { a[1] * b[1], a[2] * b[2] }
+end
+
+--- :sound related
+
+--- plays a sound, with its volume determined by camera distance/zoom
+--- @param sound sound
+--- @param x number
+--- @param y number
+--- @param audible_distance number
+function play_sound(sound, x, y, audible_distance)
+    local distance = v2_len(v2_sub({ x, y }, { world.camera.x, world.camera.y }))
+    local volume = 1.0 - math.min(distance / audible_distance, 1.0)
+    sound:setVolume(volume)
+    sound:play()
 end

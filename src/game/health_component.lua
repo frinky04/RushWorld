@@ -1,11 +1,6 @@
 -- -- Libs
 local component = require("src.core.component")
 
---- @class HealthComponent : component
---- @field health number
---- @field death_callbacks table
---- @field last_damaged_by entity
---- @field entity entity
 local health_component = {}
 health_component.__index = health_component
 

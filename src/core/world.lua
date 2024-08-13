@@ -1,4 +1,7 @@
 -- Libs
+
+
+--- world class
 local world = {}
 world.__index = world
 
@@ -104,7 +107,7 @@ end
 
 function world:y_sort()
     table.sort(self.entities, function(a, b)
-        if a.y == b.y then
+        if round(a.y) == round(b.y) then
             if a.draw_priority == b.draw_priority then
                 -- use the length of their name + their component list length as a tiebreaker
                 return #a.name + #a.components < #b.name + #b.components
@@ -157,7 +160,8 @@ function world:draw()
                 love.graphics.setColor(BACKGROUND_B)
             end
 
-            love.graphics.rectangle("fill", ((x - 1) * GRID_SIZE_PX) + GRID_SIZE_HALF_PX, ((y - 1) * GRID_SIZE_PX) + GRID_SIZE_HALF_PX, GRID_SIZE_PX, GRID_SIZE_PX)
+            love.graphics.rectangle("fill", ((x - 1) * GRID_SIZE_PX) + GRID_SIZE_HALF_PX,
+                ((y - 1) * GRID_SIZE_PX) + GRID_SIZE_HALF_PX, GRID_SIZE_PX, GRID_SIZE_PX)
         end
     end
 
@@ -216,7 +220,6 @@ function world:refresh_nav_collision()
             end
         end
     end
-
 end
 
 --- @return number x, number y

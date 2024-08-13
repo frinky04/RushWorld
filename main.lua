@@ -1,8 +1,15 @@
 -- :core imports
+require "src.core.util"
+require "src.core.shaders"
 World = require("src.core.world")
 Entity = require("src.core.entity")
 Component = require("src.core.component")
-require "src.core.util"
+
+-- :colors
+BACKGROUND_A = hexToRGBA("1b1d1e") -- lighter
+BACKGROUND_B = hexToRGBA("171819") -- darker
+BACKGROUND_C = hexToRGBA("111213") -- darkest
+
 
 -- :misc imports
 SpriteComponent = require("src.components.sprite_component")
@@ -12,7 +19,7 @@ PlayerInputComponent = require("src.components.player_input_component")
 AI_MovementComponent = require("src.components.ai_mover_component")
 HealthComponent = require("src.game.health_component")
 
--- :lib/util imports     
+-- :lib/util imports
 AStar = require("src.libs.astar")
 require "src.benchmarks.astar_benchmark"
 
@@ -24,6 +31,11 @@ FoodComponent = require("src.game.food_component")
 SwayComponent = require("src.game.sway_component")
 SpawnOnDeathComponent = require("src.game.spawn_on_death_component")
 
+-- :sounds
+
+-- :music
+
+
 -- :pre-engine initialize
 love.graphics.setDefaultFilter("nearest", "nearest")
 
@@ -34,24 +46,20 @@ GRID_SIZE = 64
 GRID_MAX = GRID_SIZE - 1
 UPDATE_TIME = 0.2
 
--- :colors
-BACKGROUND_A = hexToRGBA("1b1d1e") -- lighter
-BACKGROUND_B = hexToRGBA("171819") -- darker
-BACKGROUND_C = hexToRGBA("111213") -- darkest
 
 -- :fonts
 OXANIUM_REGULAR = love.graphics.newFont("assets/fonts/OXANIUM-BOLD.ttf")
 
--- :game vars
+--astar_benchmark()
+
+-- :game vars0
 world = World:new(GRID_SIZE, GRID_SIZE)
+
 local time_since_last_update = 0
-local last_mouse_pos = {0, 0}
-mouse_delta = {0, 0}
-
-
+local last_mouse_pos = { 0, 0 }
+mouse_delta = { 0, 0 }
 
 -- :post-engine initialize
-
 -- :rocks
 for i = 1, 128, 1 do
     local rock = Entity:new(love.math.random(0, GRID_MAX), love.math.random(0, GRID_MAX), "rock", setup_rock)
@@ -69,7 +77,8 @@ end
 
 -- :berry_bushes
 for i = 1, 32, 1 do
-    local berry_bush = Entity:new(love.math.random(0, GRID_MAX), love.math.random(0, GRID_MAX), "berry_bush", setup_berry_bush)
+    local berry_bush = Entity:new(love.math.random(0, GRID_MAX), love.math.random(0, GRID_MAX), "berry_bush",
+        setup_berry_bush)
 end
 
 -- :trees
@@ -77,17 +86,20 @@ for i = 1, 64, 1 do
     local tree = Entity:new(love.math.random(0, GRID_MAX), love.math.random(0, GRID_MAX), "tree", setup_tree)
 end
 
-for i = 1, 1, 1 do
+-- :dudes
+for i = 1, 4, 1 do
     local dude = Entity:new(GRID_SIZE / 2, GRID_SIZE / 2, "dude", setup_dude)
 end
 
 -- :LOVE2D
-
 function love.load()
     love.window.setTitle("RushWorld")
     love.window.setMode(1280, 1080)
     love.graphics.setLineStyle("rough")
     love.graphics.setBackgroundColor(BACKGROUND_C)
+
+    -- :music
+    love.audio.play(Ambient_Tracks[1])
 end
 
 function love.update(dt)
@@ -98,8 +110,8 @@ function love.update(dt)
         world:update(UPDATE_TIME);
     end
     -- :update mouse delta
-    local mouse_pos = {love.mouse.getX(), love.mouse.getY()}
-    mouse_delta = {mouse_pos[1] - last_mouse_pos[1], mouse_pos[2] - last_mouse_pos[2]}
+    local mouse_pos = { love.mouse.getX(), love.mouse.getY() }
+    mouse_delta = { mouse_pos[1] - last_mouse_pos[1], mouse_pos[2] - last_mouse_pos[2] }
     last_mouse_pos = mouse_pos
 
     if love.mouse.isDown(3) then
@@ -107,11 +119,9 @@ function love.update(dt)
     end
 
     world:tick(dt);
-
 end
 
 function love.wheelmoved(x, y)
-
     if y > 0 then
         world:zoom_by(1.1)
     elseif y < 0 then
@@ -120,7 +130,6 @@ function love.wheelmoved(x, y)
 end
 
 function love.draw()
-
     world:draw();
     -- :anything drawn here will be world space
 
@@ -130,10 +139,14 @@ function love.draw()
 
     love.graphics.setColor(1, 1, 1, 1)
 
-    love.graphics.print(love.timer.getFPS() .. " fps | " .. world.time_scale .. "x time-scale | " .. math.ceil(world.world_time) .. "s world-time | " .. #world.entities .. " entities", 8, love.graphics.getHeight() - 24)
+    love.graphics.print(
+        love.timer.getFPS() ..
+        " fps | " ..
+        world.time_scale ..
+        "x time-scale | " .. math.ceil(world.world_time) .. "s world-time | " .. #world.entities .. " entities", 8,
+        love.graphics.getHeight() - 24)
 
     -- draw rectangle over the whole screen to represent nighttime
-
 end
 
 function love.keypressed(key, scancode, isrepeat)
@@ -178,7 +191,6 @@ function love.keypressed(key, scancode, isrepeat)
     if key == "4" then
         world.time_scale = 32
     end
-
 end
 
 function love.keyreleased(key, scancode)

@@ -4,6 +4,7 @@
     "lowercase-global",
     "deprecated",
     "inject-field",
-    "undefined-field"
+    "undefined-field",
+    "undefined-global"
   ]
 }

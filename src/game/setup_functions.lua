@@ -3,9 +3,8 @@ function setup_tree(entity)
     local sprite_component = SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/tree.png"), {1, 1, 1, 1})
     SwayComponent:new(entity)
     entity.draw_priority = 5
-    sprite_component.render_offset_x = love.math.random(-GRID_SIZE_HALF_PX / 2, GRID_SIZE_HALF_PX / 2)
-    sprite_component.render_offset_y = love.math.random(-GRID_SIZE_HALF_PX / 2, 0.0)
     sprite_component.pivot = SPRITE_PIVOT.CENTER_BOTTOM
+    sprite_component.render_offset_y = -4
 
     HealthComponent:new(entity, 50)
     SpawnOnDeathComponent:new(entity, setup_log, "log")
@@ -18,16 +17,15 @@ function setup_dude(entity)
     SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/dude.png"), {1, 1, 1, 1}, 35).pivot = SPRITE_PIVOT.CENTER_BOTTOM
 
     CollisionComponent:new(entity).affects_pathfinding = true
-    AI_MovementComponent:new(entity)
-    -- PlayerInputComponent:new(entity)
-    local name_plate = TextComponent:new(entity, OXANIUM_REGULAR, "", {1, 1, 1, 1})
-    name_plate.render_offset_y = GRID_SIZE_HALF_PX + 2
-    name_plate.scale = 0.75
-
+    --PlayerInputComponent:new(entity)
+    -- local name_plate = TextComponent:new(entity, OXANIUM_REGULAR, "", {1, 1, 1, 1})
+    -- name_plate.render_offset_y = GRID_SIZE_HALF_PX + 2
+    -- name_plate.scale = 0.75
+    
     HealthComponent:new(entity, 100)
-
+    
+    AI_MovementComponent:new(entity)
     DudeBrainComponent:new(entity)
-
     DudeComponent:new(entity)
 
     entity.draw_priority = 10
