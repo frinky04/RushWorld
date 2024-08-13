@@ -44,21 +44,51 @@ function dude_component:new(entity)
     self.last_name = "McDuderson"
     self.status = "None"
 
+    self.held = nil
+    self.last_held = nil
+
     self.hunger = 100
     self.tiredness = 100
 
     return dude_component
 end
 
+function dude_component:tick(dt)
+    if self.held then
+        if self.held ~= self.last_held then
+            if self.held then
+                self:on_pickup(self.held)
+            end
+            if self.last_held then
+                self:on_drop(self.last_held)
+            end
+        end
+
+
+        local x, y = self.entity:get_render_position()
+        self.held.x = x / GRID_SIZE_PX
+        self.held.y = (y + 4) / GRID_SIZE_PX
+        self.last_held = self.held
+    end
+end
+
 function dude_component:update(dt)
     if self.text then
-        self.text.text = self.status .. "\nHunger: " .. math.ceil(self.hunger) .. "\nHealth: " .. math.ceil(self.health.health)
+        self.text.text = self.status ..
+            "\nHunger: " .. math.ceil(self.hunger) .. "\nHealth: " .. math.ceil(self.health.health)
     end
     -- update stats
     self.hunger = self.hunger - dt
     if self.hunger < 0 then
         self.health:take_damage(dt * 2)
         self.hunger = 0
+    end
+end
+
+function dude_component:destroy()
+    if self.held then
+        self:on_drop(self.held)
+        self.held = nil
     end
 end
 
@@ -86,6 +116,20 @@ function dude_component:eat(entity)
     end
 
     food_component:on_eaten(self)
+end
+
+function dude_component:on_drop(entity)
+    if entity then
+        entity.render_ontop = false
+        print("Dude dropped " .. entity.name)
+    end
+end
+
+function dude_component:on_pickup(entity)
+    if entity then
+        entity.render_ontop = true
+        print("Dude picked up " .. entity.name)
+    end
 end
 
 return dude_component

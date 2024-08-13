@@ -78,10 +78,28 @@ end
 
 function world:find_entity_at(x, y)
     for i, entity in ipairs(self.entities) do
-        if round(entity.x) == x and round(entity.y) == y then
+        local en_x = round(entity.x)
+        local en_y = round(entity.y)
+        if en_x == x and en_y == y then
             return entity
         end
     end
+end
+
+function world:find_entities_at(x, y)
+    local entities = {}
+    for i, entity in ipairs(self.entities) do
+        local en_x = round(entity.x)
+        local en_y = round(entity.y)
+        if en_x == x and en_y == y then
+            table.insert(entities, entity)
+        end
+    end
+    return entities
+end
+
+function world:is_entity_at(x, y)
+    return self:find_entity_at(x, y) ~= nil
 end
 
 function world:find_entity_at_mouse()
@@ -107,13 +125,22 @@ end
 
 function world:y_sort()
     table.sort(self.entities, function(a, b)
+        -- if render_ontop = true, render on top
+        if a.render_ontop and not b.render_ontop then
+            return false
+        elseif b.render_ontop and not a.render_ontop then
+            return true
+        end
+
+        -- If neither is a child of the other, use the normal sorting criteria
         if round(a.y) == round(b.y) then
             if a.draw_priority == b.draw_priority then
-                -- use the length of their name + their component list length as a tiebreaker
-                return #a.name + #a.components < #b.name + #b.components
+                -- Use their table index to break the tie
+                return a.entity_creation_time < b.entity_creation_time
             end
             return a.draw_priority < b.draw_priority
         end
+
         return a.y < b.y
     end)
 end

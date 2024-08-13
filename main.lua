@@ -87,7 +87,7 @@ for i = 1, 64, 1 do
 end
 
 -- :dudes
-for i = 1, 4, 1 do
+for i = 1, 1, 1 do
     local dude = Entity:new(GRID_SIZE / 2, GRID_SIZE / 2, "dude", setup_dude)
 end
 
@@ -97,9 +97,6 @@ function love.load()
     love.window.setMode(1280, 1080)
     love.graphics.setLineStyle("rough")
     love.graphics.setBackgroundColor(BACKGROUND_C)
-
-    -- :music
-    love.audio.play(Ambient_Tracks[1])
 end
 
 function love.update(dt)
@@ -153,12 +150,9 @@ function love.keypressed(key, scancode, isrepeat)
     world:keypressed(key, scancode, isrepeat)
 
     if key == "space" then
-        -- make sure there isn't something already there
-        if world:find_entity_at_mouse() == nil then
-            local x, y = world:get_current_mouse_grid_position()
-            local entity = Entity:new(x, y, "tree")
-            setup_ruin(entity)
-        end
+        local x, y = world:get_current_mouse_grid_position()
+        local entity = Entity:new(x, y, "wall")
+        setup_wall(entity)
     end
 
     if key == "c" then
@@ -171,10 +165,20 @@ function love.keypressed(key, scancode, isrepeat)
 
     if key == "x" then
         local x, y = world:get_current_mouse_grid_position()
-        -- find entity at x, y
-        local entity = world:find_entity_at(x, y)
-        if entity then
+        -- find entitties at mouse
+        local entities = world:find_entities_at(x, y)
+        for i, entity in ipairs(entities) do
             damage_entity(entity, 100)
+        end
+    end
+
+    if key == "f1" then
+        -- spawn an stone, and the give it do dude
+        local x, y = world:get_current_mouse_grid_position()
+        local entity = Entity:new(x, y, "stone", setup_log)
+        local dude = world:find_entity_by_name("dude")
+        if dude then
+            dude:find_component_of_type(DudeComponent).held = entity
         end
     end
 

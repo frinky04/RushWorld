@@ -72,6 +72,17 @@ function random_bool()
     return love.math.random(0, 1) == 1
 end
 
+---comment
+---@param value number the number
+---@param in_min number the minimum value of the input range
+---@param in_max number the maximum value of the input range
+---@param out_min number the value when the input is in_min
+---@param out_max number the value when the input is in_max
+---@return number the mapped value
+function map_to_range(value, in_min, in_max, out_min, out_max)
+    return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+end
+
 --- :v2
 
 ---returns v2 a + b.

@@ -23,22 +23,38 @@ function sprite_component:new(entity, sprite, tint, move_tween_speed)
 
     self.name = "SpriteComponent"
     self.sprite = sprite
-    self.tint = tint or { 255, 255, 255, 1 }
+    self.tint = tint or { 1, 1, 1, 1 }
     self.pivot = SPRITE_PIVOT.CENTER_CENTER
     self.render_offset_x, self.render_offset_y = 0, 0
 
     self.flip_x = false
     self.flip_y = false
 
+    self.white = false
+
+    -- blink
+    self.blink = false
+    self.blink_min = 0.1
+    self.blink_max = 0.5
+    self.blink_speed = 5
+    self.blink_alpha = 0.0
+
     -- internal render position
     self.lerped_x = entity.x
     self.lerped_y = entity.y
     self.move_tween_speed = move_tween_speed or -1
 
+
     return self
 end
 
 function sprite_component:tick(dt)
+    -- update blink
+    if self.blink then
+        self.blink_alpha = map_to_range(math.sin(love.timer.getTime() * self.blink_speed), -1, 1,
+            self.blink_min, self.blink_max)
+    end
+
     if self.move_tween_speed == -1 then
         self.lerped_x = self.entity.x
         self.lerped_y = self.entity.y
@@ -56,10 +72,22 @@ function sprite_component:get_render_position()
     return self.lerped_x * GRID_SIZE_PX + self.render_offset_x, self.lerped_y * GRID_SIZE_PX + self.render_offset_y
 end
 
-function sprite_component:draw()
-    --love.graphics.setShader(shader_solid_white)
+function sprite_component:get_tint()
+    local tint = self.tint
 
-    love.graphics.setColor({ 1.0, 1.0, 1.0, 1.0 })
+    if self.blink then
+        tint = { tint[1], tint[2], tint[3], self.blink_alpha }
+    end
+
+    return tint
+end
+
+function sprite_component:draw()
+    if self.white then
+        love.graphics.setShader(shader_solid_white)
+    end
+
+    love.graphics.setColor(self:get_tint())
     local sprite = self.sprite
 
     local scale_x = 1
@@ -89,8 +117,8 @@ function sprite_component:draw()
         render_pos_y = render_pos_y + sprite_height
     end
 
-    love.graphics.draw(sprite, render_pos_x, render_pos_y, self.entity.rot, scale_x, scale_y, sprite_origin_x,
-        sprite_origin_y)
+    love.graphics.draw(sprite, render_pos_x, render_pos_y, self.entity.rot,
+        scale_x, scale_y, sprite_origin_x, sprite_origin_y)
 
     -- unset shader
     love.graphics.setShader()

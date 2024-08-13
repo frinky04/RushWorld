@@ -12,10 +12,11 @@ entity.__index = entity
 --- new entity, adds to the default world
 ---@param x number x_pos
 ---@param y number y_pos
----@param name string|nil name of entity 
+---@param name string|nil name of entity
 ---@param setup_function function|nil setup function
 function entity:new(x, y, name, setup_function)
     local self = setmetatable({}, entity)
+
     self.name = name or "Entity"
 
     self.x = x
@@ -25,6 +26,9 @@ function entity:new(x, y, name, setup_function)
     self.draw_priority = 0
     self.is_valid = true
     self.components = {}
+    self.render_ontop = false
+    self.entity_creation_time = love.timer.getTime()
+
 
     -- Add the entity to the world
     world:add_entity(self)
@@ -133,6 +137,7 @@ function entity:key_input(key, scancode, isrepeat, ispressed)
     end
 end
 
+-- moves the entity, taking into account collision
 function entity:move(x, y)
     -- if we have a collision component, check if we can move (sweep test)
     for i, component in ipairs(self.components) do
@@ -145,7 +150,6 @@ function entity:move(x, y)
                 self.y = math.max(0, math.min(self.y, GRID_MAX))
 
                 -- world:refresh_nav_collision()
-
             end
             return
         end
@@ -155,9 +159,9 @@ function entity:move(x, y)
     self.y = self.y + y
 
     -- clamp to world bounds
-
 end
 
+-- teleports the entity to a new position
 function entity:teleport(x, y)
     self.x = x
     self.y = y
@@ -172,6 +176,10 @@ function entity:get_render_position()
 
     -- if no sprite component, return the entity position
     return self.x * GRID_SIZE_PX, self.y * GRID_SIZE_PX
+end
+
+function entity:get_time_since_creation()
+    return love.timer.getTime() - self.entity_creation_time
 end
 
 return entity
