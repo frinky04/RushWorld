@@ -1,6 +1,7 @@
 -- :core imports
 require "src.core.util"
 require "src.core.shaders"
+require "src.core.sounds"
 World = require("src.core.world")
 Entity = require("src.core.entity")
 Component = require("src.core.component")
@@ -30,8 +31,9 @@ DudeBrainComponent = require("src.game.dudes.dude_brain_component")
 FoodComponent = require("src.game.food_component")
 SwayComponent = require("src.game.sway_component")
 SpawnOnDeathComponent = require("src.game.spawn_on_death_component")
+BuildingComponent = require("src.game.building_component")
 
--- :sounds
+
 
 -- :music
 
@@ -97,6 +99,9 @@ function love.load()
     love.window.setMode(1280, 1080)
     love.graphics.setLineStyle("rough")
     love.graphics.setBackgroundColor(BACKGROUND_C)
+
+    -- :sounds to play on start
+    am_forest_ambience:play()
 end
 
 function love.update(dt)
@@ -168,7 +173,11 @@ function love.keypressed(key, scancode, isrepeat)
         -- find entitties at mouse
         local entities = world:find_entities_at(x, y)
         for i, entity in ipairs(entities) do
-            damage_entity(entity, 100)
+            if entity:find_component_of_type(HealthComponent) then
+                damage_entity(entity, 100)
+            else
+                entity:destroy()
+            end
         end
     end
 

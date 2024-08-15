@@ -72,6 +72,18 @@ function random_bool()
     return love.math.random(0, 1) == 1
 end
 
+-- checks if any of the entitys in the list have a component of the given type
+---@param entities table
+---@param component_type component
+function any_entity_has_component_of_type(entities, component_type)
+    for i, entity in ipairs(entities) do
+        if entity:find_component_of_type(component_type) then
+            return true
+        end
+    end
+    return false
+end
+
 ---comment
 ---@param value number the number
 ---@param in_min number the minimum value of the input range

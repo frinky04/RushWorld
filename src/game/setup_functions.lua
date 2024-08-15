@@ -61,11 +61,7 @@ end
 
 function setup_wall(entity)
     local sprite_component = SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/wall.png"))
-    sprite_component.white = true
-    sprite_component.tint = { 1.0, 1.0, 1.0, 0.1 }
-    sprite_component.blink = true
-    sprite_component.blink_min = 0.1
-    sprite_component.blink_max = 0.5
+    local building_component = BuildingComponent:new(entity)
 end
 
 function setup_grass(entity)
@@ -83,6 +79,8 @@ function setup_ruin(entity)
         .CENTER_BOTTOM
     entity.draw_priority = 0
     CollisionComponent:new(entity)
+    HealthComponent:new(entity, 1000)
+    SpawnOnDeathComponent:new(entity, setup_ruble, "ruble")
 end
 
 function setup_berry_bush(entity)
@@ -105,4 +103,12 @@ function setup_dude_corpse(entity)
         { 1, 1, 1, 1 })
     -- sprite_component.render_offset_y = -2
     entity.draw_priority = 4
+end
+
+function setup_ruble(entity)
+    local sprite_component = SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/ruble.png"),
+        { 1, 1, 1, 1 })
+    entity.draw_priority = 0
+    HealthComponent:new(entity, 25)
+    SpawnOnDeathComponent:new(entity, setup_stone, "stone")
 end

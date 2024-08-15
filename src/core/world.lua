@@ -31,6 +31,9 @@ function world:new(x_size, y_size)
         y = y_size * GRID_SIZE_PX / 2
     }
 
+    -- :callbacks
+    self.entity_updated_callbacks = {} -- called when an entity is added or removed
+
     return self
 end
 
