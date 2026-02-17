@@ -1,15 +1,14 @@
--- -- Libs
+-- Utility AI Brain Component
 local component = require("src.core.component")
 
--- Sprite Pivot Enum
-DUDE_BRAIN_STATE = {
-    IDLE = 1,
-    WANDERING = 2,
-    FIND_FOOD = 3,
-    WORK = 4,
-}
+-- Action modules
+local action_idle = require("src.game.dudes.dude_actions.action_idle")
+local action_wander = require("src.game.dudes.dude_actions.action_wander")
+local action_eat = require("src.game.dudes.dude_actions.action_eat")
+local action_work = require("src.game.dudes.dude_actions.action_work")
 
----- AI Mover Component
+-- Hysteresis bonus for current action to prevent flickering
+local HYSTERESIS_BONUS = 0.05
 
 local dude_brain_component = {}
 dude_brain_component.__index = dude_brain_component
@@ -25,201 +24,71 @@ function dude_brain_component:new(entity)
     self.name = "Dude Brain Component"
 
     self.dude = nil
-    self.brain_state = DUDE_BRAIN_STATE.WANDERING
-    self.completed = true
     self.pause_time = 0.0
 
+    -- Registered actions
+    self.actions = {
+        action_idle,
+        action_wander,
+        action_eat,
+        action_work,
+    }
 
-    -- :work state
-    self.resource = nil
-    self.harvest = nil
+    -- Current action state
+    self.current_action = nil
+    self.action_time = 0
+    self.action_state = {}
 
+    -- Future system hooks (stubs for now)
+    self.trait_modifiers = {}   -- {action_name = multiplier}
+    self.mood_modifier = 1.0   -- global mood multiplier
 
     return self
 end
 
--- function dude_brain_component:do_state_template(dt)
-
---     self.dude.status = "State"
---     if self.completed then
---         -- do something on start of state
---         -- self.completed = false
---     end
---     -- do something every frame
-
---     if action_completed then
---         self.completed = true
---     end
--- end
-
-function dude_brain_component:do_wandering(dt)
-    -- Wandering around
-
-    self.dude.status = "Wandering"
-    if self.completed then
-        local x, y = world:get_random_positon_in_radius(self.entity.x, self.entity.y, 5)
-        self.dude.goal = {
-            x = x,
-            y = y
-        }
-        self.completed = false
-    end
-
-    if self.dude.ai_mover:is_at_goal() then
-        self.dude.goal = nil
-        self.completed = true
-        self.pause_time = 5
-    end
+function dude_brain_component:get_trait_modifier(action_name)
+    return self.trait_modifiers[action_name] or 1.0
 end
 
-function dude_brain_component:do_find_food(dt)
-    -- Finding food
-    self.dude.status = "Finding Food"
-    if self.completed then
-        -- for now, harcode berry bush
-        local food = world:find_nearest_entity_by_name("berry_bush", self.entity.x, self.entity.y)
-        if is_valid(food) then
-            self.dude.goal = food
-            self.completed = false
-        else
-            self.completed = true
-            self.pause_time = 1
-            return
-        end
+function dude_brain_component:score_action(action)
+    local base = action:score(self.dude)
+    local trait = self:get_trait_modifier(action.name)
+    local score = base * trait * self.mood_modifier
+
+    -- Hysteresis: current action gets a bonus
+    if action == self.current_action then
+        score = score + HYSTERESIS_BONUS
     end
 
-    self.dude.status = "Moving to food"
-    if is_valid(self.dude.goal) == false then
-        self.dude.goal = nil
-        self.completed = true
-        self.pause_time = 1
-        return
-    end
-
-    if self.dude.ai_mover:is_at_goal() then
-        self.dude:eat(self.dude.goal)
-        self.completed = true
-        self.dude.hunger = 100
-        self.pause_time = 2
-    end
+    return score
 end
 
-function dude_brain_component:do_work(dt)
-    -- Do whatever work
+function dude_brain_component:select_best_action()
+    local best_action = nil
+    local best_score = -1
 
-    -- check if building is complete or no longer valid
-    if is_valid_component(get_building_component(self.dude.work)) == false or is_valid(self.dude.work) == false then
-        print("DONE")
-        self.dude.goal = nil
-        self.dude.work = nil
-        self.harvest = nil
-        self.material = nil
-        self.completed = true
-        self.pause_time = 1
-        return
+    for _, action in ipairs(self.actions) do
+        local score = self:score_action(action)
+        if score > best_score then
+            best_score = score
+            best_action = action
+        end
     end
 
-    self.dude.status = "Working"
-    if self.completed then
-        if self.dude.work == nil then
-            self.dude.work = dude_manager:find_component_of_type(DudeManagerComponent):find_free_work()
-        end
-
-        if self.dude.work == nill then
-            return
-        end
-
-        local material_needed = get_building_component(self.dude.work):get_next_material()
-        self.material = world:find_nearest_entity_by_name(material_needed, self.entity.x, self.entity.y)
-
-        if not is_valid(self.material) then
-            self.harvest = find_closest_resource_that_drops_item(material_needed, self.entity.x,  self.entity.y)
-        end
-
-        if not is_valid(self.material) and not is_valid(self.harvest) then
-            self.completed = true
-            self.pause_time = 1
-            self.status = "No resources found"
-            return
-        end
-
-        if is_valid(self.material) and self.material == self.dude.held then
-            local close = world.astar:find_closest_valid_position({self.dude.work.x, self.dude.work.y}, true)
-            self.dude.goal = close
-        elseif is_valid(self.material) then
-            self.dude.goal = self.material
-        elseif is_valid(self.harvest) then
-            self.dude.goal = self.harvest
-        end
-        
-        
-        self.completed = false
-    end
-
-
-    if self.dude.ai_mover:is_at_goal() then
-        if is_valid(self.material) and self.material == self.dude.held then
-            print("Delivering... ", self.material.name)
-            get_building_component(self.dude.work):add_material(self.material)
-            self.dude.held:destroy()
-
-
-            return
-        end
-        
-        if is_valid(self.harvest) then
-            print("Harvesting... ", self.harvest.name)
-            damage_entity(self.harvest, 50)
-            self.completed = true
-            self.pause_time = 2
-            return
-        end
-
-        if is_valid(self.material) then
-            self.dude.held = self.material
-            self.completed = true
-            return
-        end
-
-        self.dude.work = nil
-        self.harvest = nil
-        self.material = nil
-        self.completed = true
-
-    end
+    return best_action
 end
 
-function dude_brain_component:calculate_brain_state()
-    -- hungry
-    if self.dude.hunger < 25 then
-        self.pause_time = 0
-        return DUDE_BRAIN_STATE.FIND_FOOD
+function dude_brain_component:switch_action(new_action)
+    if self.current_action then
+        self.current_action:cancel(self.dude, self)
     end
 
-    -- has work to do
-    if is_valid(self.dude.work) and self.brain_state == DUDE_BRAIN_STATE.WORK then
-        return DUDE_BRAIN_STATE.WORK
-    end
+    self.current_action = new_action
+    self.action_time = 0
+    self.action_state = {}
 
-    self.dude.work = dude_manager:find_component_of_type(DudeManagerComponent):find_free_work()
-    if is_valid(self.dude.work) then 
-        return DUDE_BRAIN_STATE.WORK
-    end
-
-    -- default to wandering
-
-    return DUDE_BRAIN_STATE.WANDERING
-end
-
-function dude_brain_component:update_brain_state()
-    local new_state = self.brain_state
-
-    new_state = self:calculate_brain_state()
-
-    if new_state ~= self.brain_state then
-        self.completed = true
-        self.dude.goal = nil
-        self.brain_state = new_state
+    if self.current_action then
+        self.current_action:start(self.dude, self)
     end
 end
 
@@ -229,8 +98,7 @@ function dude_brain_component:update(dt)
         return
     end
 
-    self:update_brain_state()
-
+    -- Pause timer
     if self.pause_time > 0 then
         self.dude.ai_mover.should_move = false
         self.pause_time = self.pause_time - dt
@@ -239,12 +107,20 @@ function dude_brain_component:update(dt)
         self.dude.ai_mover.should_move = true
     end
 
-    if self.brain_state == DUDE_BRAIN_STATE.WANDERING then
-        self:do_wandering(dt)
-    elseif self.brain_state == DUDE_BRAIN_STATE.FIND_FOOD then
-        self:do_find_food(dt)
-    elseif self.brain_state == DUDE_BRAIN_STATE.WORK then
-        self:do_work(dt)
+    -- Evaluate and potentially switch actions
+    local best = self:select_best_action()
+    if best ~= self.current_action then
+        self:switch_action(best)
+    end
+
+    -- Perform current action
+    if self.current_action then
+        self.action_time = self.action_time + dt
+        local complete = self.current_action:perform(self.dude, self, dt)
+        if complete then
+            self.current_action = nil
+            self.action_time = 0
+        end
     end
 end
 

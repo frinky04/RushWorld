@@ -1,5 +1,7 @@
 # Agent Instructions
 
+> **Start here:** Read [`STRUCTURE.md`](STRUCTURE.md) for a full bird's eye view of the codebase — file tree with summaries, key patterns, architecture deep dive, and important globals.
+
 ## Runtime
 - **Love2D** game engine with **Lua**
 - Run: `love .` or `run.bat`
@@ -40,3 +42,4 @@ assets/           — Sprites, fonts, sounds
 - Grid-based positioning: entity `x, y` are grid coords, not pixels
 - Two update loops: `update(dt)` (every frame), `tick(dt)` (fixed timestep at `UPDATE_TIME`)
 - Use `hexToRGBA()` from `src/core/util.lua` for colors
+- Write any general codebase advice in STRUCTURE.md

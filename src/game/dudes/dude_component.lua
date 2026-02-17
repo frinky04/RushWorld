@@ -55,28 +55,26 @@ function dude_component:new(entity)
 
 
     dude_manager:find_component_of_type(DudeManagerComponent):refresh_dudes(self)
-    return dude_component
+    return self
 end
 
 function dude_component:tick(dt)
     self.ai_mover.goal = self.goal
 
+    if self.held ~= self.last_held then
+        if self.last_held then
+            self:on_drop(self.last_held)
+        end
+        if self.held then
+            self:on_pickup(self.held)
+        end
+        self.last_held = self.held
+    end
 
     if self.held then
-        if self.held ~= self.last_held then
-            if self.held then
-                self:on_pickup(self.held)
-            end
-            if self.last_held then
-                self:on_drop(self.last_held)
-            end
-        end
-
-
         local x, y = self.entity:get_render_position()
         self.held.x = x / GRID_SIZE_PX
         self.held.y = (y + 4) / GRID_SIZE_PX
-        self.last_held = self.held
     end
 end
 
@@ -103,7 +101,7 @@ function dude_component:destroy()
 end
 
 function dude_component:on_death()
-    -- in the context of this function, self is the Entity owning this component
+    -- self is the dude_component instance (registered via :register_death_callback)
     print("Dude has died")
     local corpse = Entity:new(self.entity.x, self.entity.y, "Corpse", setup_dude_corpse)
 end
@@ -113,7 +111,7 @@ function dude_component:eat(entity)
         return
     end
 
-    food_component = entity:find_component_of_type(FoodComponent)
+    local food_component = entity:find_component_of_type(FoodComponent)
 
     if food_component == nil then
         print("Dude tried to eat something that wasn't food!")

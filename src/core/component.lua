@@ -18,8 +18,6 @@ function component:new(entity)
 end
 
 function component:destroy()
-    print(self.entity.name)
-
     -- remove from list of components
     for i, component in ipairs(self.entity.components) do
         if component == self then

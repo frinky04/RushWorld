@@ -77,7 +77,7 @@ end
 ---@param entity entity
 ---@param damage number
 function damage_entity(entity, damage)
-    health_component = entity:find_component_of_type(HealthComponent)
+    local health_component = entity:find_component_of_type(HealthComponent)
     if health_component then
         health_component:take_damage(damage)
     end

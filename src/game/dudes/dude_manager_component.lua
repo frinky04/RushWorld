@@ -17,7 +17,7 @@ function dude_manager_component:new(entity)
     self.name = "Dude Manager"
     self.dudes = {}
 
-    return dude_manager_component
+    return self
 end
 
 function dude_manager_component:refresh_dudes()
@@ -28,7 +28,8 @@ end
 
 function dude_manager_component:is_another_dudes_work(entity)
     for _, dude in ipairs(self.dudes) do
-        if dude:find_component_of_type(DudeComponent).work == entity then
+        local dc = dude:find_component_of_type(DudeComponent)
+        if dc and dc.work == entity then
             return true
         end
     end
