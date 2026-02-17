@@ -9,11 +9,15 @@ function setup_tree(entity)
 
     HealthComponent:new(entity, 50)
     SpawnOnDeathComponent:new(entity, setup_log, "log")
+
+    entity.name = "tree"
 end
 
 function setup_log(entity)
     local sprite_component = SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/log.png"), { 1, 1, 1, 1 })
     entity.draw_priority = 0
+
+    entity.name = "log"
 end
 
 function setup_dude(entity)
@@ -22,9 +26,10 @@ function setup_dude(entity)
 
     CollisionComponent:new(entity).affects_pathfinding = true
     --PlayerInputComponent:new(entity)
-    -- local name_plate = TextComponent:new(entity, OXANIUM_REGULAR, "", {1, 1, 1, 1})
-    -- name_plate.render_offset_y = GRID_SIZE_HALF_PX + 2
-    -- name_plate.scale = 0.75
+
+    local name_plate = TextComponent:new(entity, OXANIUM_REGULAR, "", { 1, 1, 1, 1 })
+    name_plate.render_offset_y = GRID_SIZE_HALF_PX + 2
+    name_plate.scale = 0.75
 
     HealthComponent:new(entity, 100)
 
@@ -33,6 +38,7 @@ function setup_dude(entity)
     DudeComponent:new(entity)
 
     entity.draw_priority = 10
+    entity.name = "dude"
 end
 
 function setup_chaser(entity)
@@ -40,28 +46,40 @@ function setup_chaser(entity)
         .CENTER_BOTTOM
     CollisionComponent:new(entity).affects_pathfinding = false
     AI_MovementComponent:new(entity)
+
     entity.draw_priority = 10
+    entity.name = "chaser"
 end
 
 function setup_rock(entity)
     local sprite_component = SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/rock.png"),
         { 1, 1, 1, 1 })
     -- random offset
-    entity.x = entity.x + love.math.random(-GRID_SIZE_HALF_PX / 2, GRID_SIZE_HALF_PX / 2) / GRID_SIZE_PX
-    entity.y = entity.y + love.math.random(-GRID_SIZE_HALF_PX / 2, GRID_SIZE_HALF_PX / 2) / GRID_SIZE_PX
+    --entity.x = entity.x + love.math.random(-GRID_SIZE_HALF_PX / 2, GRID_SIZE_HALF_PX / 2) / GRID_SIZE_PX
+    --ntity.y = entity.y + love.math.random(-GRID_SIZE_HALF_PX / 2, GRID_SIZE_HALF_PX / 2) / GRID_SIZE_PX
 
     HealthComponent:new(entity, 100)
-    SpawnOnDeathComponent:new(entity, setup_stone, "stone")
+    ResourceComponent:new(entity, "rock", { "stone" }, { setup_stone })
+
+    --SpawnOnDeathComponent:new(entity, setup_stone, "stone")
+
+    entity.name = "rock"
 end
 
 function setup_stone(entity)
     local sprite_component = SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/stone.png"),
         { 1, 1, 1, 1 })
+    local resource_component = ResourceComponent:new(entity, "stone", nil, nil)
+
+    entity.name = "stone"
 end
 
 function setup_wall(entity)
     local sprite_component = SpriteComponent:new(entity, love.graphics.newImage("assets/sprites/wall.png"))
-    local building_component = BuildingComponent:new(entity)
+    local building_component = BuildingComponent:new(entity, {"wall"}, {"wall"}, {"stone"})
+
+    entity.name = "wall"
+
 end
 
 function setup_grass(entity)
@@ -71,6 +89,8 @@ function setup_grass(entity)
     sprite_component.render_offset_y = love.math.random(-GRID_SIZE_HALF_PX / 2, 0.0)
     sprite_component.pivot = SPRITE_PIVOT.CENTER_BOTTOM
     SwayComponent:new(entity, 0.05, 0.25)
+    
+    entity.name = "grass"
     entity.draw_priority = 10
 end
 
@@ -81,6 +101,8 @@ function setup_ruin(entity)
     CollisionComponent:new(entity)
     HealthComponent:new(entity, 1000)
     SpawnOnDeathComponent:new(entity, setup_ruble, "ruble")
+
+    entity.name = "ruin"
 end
 
 function setup_berry_bush(entity)
@@ -96,6 +118,7 @@ function setup_berry_bush(entity)
     SwayComponent:new(entity, 0.05, 0.25)
 
     entity.draw_priority = 0
+    entity.name = "berry_bush"
 end
 
 function setup_dude_corpse(entity)
@@ -103,6 +126,7 @@ function setup_dude_corpse(entity)
         { 1, 1, 1, 1 })
     -- sprite_component.render_offset_y = -2
     entity.draw_priority = 4
+    entity.name = "dude_corpse"
 end
 
 function setup_ruble(entity)
@@ -111,4 +135,10 @@ function setup_ruble(entity)
     entity.draw_priority = 0
     HealthComponent:new(entity, 25)
     SpawnOnDeathComponent:new(entity, setup_stone, "stone")
+
+    entity.name = "ruble"
+end
+
+function setup_dude_manager(entity)
+    DudeManagerComponent:new(entity)
 end

@@ -47,6 +47,15 @@ function entity:add_component(component)
     return component
 end
 
+function entity:remove_component(component)
+    for i, comp in ipairs(self.components) do
+        if comp == component then
+            table.remove(self.components, i)
+            return
+        end
+    end
+end
+
 --- func to find all components of a type
 ---@param class component
 ---@return table components

@@ -6,6 +6,7 @@ World = require("src.core.world")
 Entity = require("src.core.entity")
 Component = require("src.core.component")
 
+
 -- :colors
 BACKGROUND_A = hexToRGBA("1b1d1e") -- lighter
 BACKGROUND_B = hexToRGBA("171819") -- darker
@@ -19,6 +20,7 @@ CollisionComponent = require("src.components.collision_component")
 PlayerInputComponent = require("src.components.player_input_component")
 AI_MovementComponent = require("src.components.ai_mover_component")
 HealthComponent = require("src.game.health_component")
+ResourceComponent = require("src.game.resource_component")
 
 -- :lib/util imports
 AStar = require("src.libs.astar")
@@ -32,11 +34,7 @@ FoodComponent = require("src.game.food_component")
 SwayComponent = require("src.game.sway_component")
 SpawnOnDeathComponent = require("src.game.spawn_on_death_component")
 BuildingComponent = require("src.game.building_component")
-
-
-
--- :music
-
+DudeManagerComponent = require("src.game.dudes.dude_manager_component")
 
 -- :pre-engine initialize
 love.graphics.setDefaultFilter("nearest", "nearest")
@@ -48,14 +46,15 @@ GRID_SIZE = 64
 GRID_MAX = GRID_SIZE - 1
 UPDATE_TIME = 0.2
 
-
 -- :fonts
 OXANIUM_REGULAR = love.graphics.newFont("assets/fonts/OXANIUM-BOLD.ttf")
 
---astar_benchmark()
 
--- :game vars0
+-- astar_benchmark()
+
+-- :game vars
 world = World:new(GRID_SIZE, GRID_SIZE)
+dude_manager = Entity:new(0, 0, "DudeManager", setup_dude_manager)
 
 local time_since_last_update = 0
 local last_mouse_pos = { 0, 0 }

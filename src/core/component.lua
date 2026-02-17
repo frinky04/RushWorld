@@ -11,12 +11,25 @@ function component:new(entity)
     self.name = "Component"
     self.enabled = true
 
+    self.is_valid = true
+
     entity:add_component(self)
     return self
 end
 
 function component:destroy()
-    self.entity.components[self] = nil
+    print(self.entity.name)
+
+    -- remove from list of components
+    for i, component in ipairs(self.entity.components) do
+        if component == self then
+            table.remove(self.entity.components, i)
+            break
+        end
+    end
+
+    self.is_valid = false
+    -- remove the component from the entity
 end
 
 function component:__tostring()

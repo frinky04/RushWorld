@@ -47,6 +47,20 @@ function world:add_entity(entity)
     return entity
 end
 
+function world:find_all_entities_with_component(component_type)
+    local entities = {}
+    for i, entity in ipairs(self.entities) do
+        for j, component in ipairs(entity.components) do
+            if component:is_a(component_type) and is_valid_component(component) then
+                table.insert(entities, entity)
+                break
+            end
+        end
+    end
+
+    return entities
+end
+
 ---gets an entity by name
 ---@param name string name of entity
 ---@return any entity entity found

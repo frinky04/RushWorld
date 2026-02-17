@@ -17,6 +17,7 @@ function Node:new(x, y, parent)
         fScore = math.huge,
         walkable = true
     }
+
     setmetatable(node, Node)
     return node
 end
@@ -114,6 +115,31 @@ function astar:find_closest_walkable(nodes, target_pos)
 
     return closest_node
 end
+
+---Returns the closest position to the target position, excluding non-walkable tiles and the target position itself. We dont use nodes for this, just use the grid
+---@param target_pos any this is the pos
+---@param exclude_target any if we should exclude the target position
+---@return any return the closest position
+function astar:find_closest_valid_position(target_pos, exclude_target)
+    local min_distance = math.huge
+    local closest_pos = nil
+
+    for y, row in pairs(self.grid) do
+        for x, cell in pairs(row) do
+            if self:is_walkable(x, y) and (not exclude_target or (x ~= target_pos[1] and y ~= target_pos[2])) then
+                local dist = distance(Vector(x, y), Vector(target_pos[1], target_pos[2]))
+                if dist < min_distance then
+                    min_distance = dist
+                    closest_pos = {x= x,y=y}
+                end
+            end
+        end
+    end
+
+    return closest_pos
+end
+
+
 
 function astar:path(start_pos, finish_pos)
     local open = Heap()

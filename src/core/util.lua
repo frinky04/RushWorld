@@ -24,6 +24,19 @@ function almost_equals(a, b, epsilon)
     return math.abs(a - b) <= epsilon
 end
 
+---returns if the table contains a value.
+---@param table table
+---@param value any
+---@return boolean
+function table_contains(table, value)
+    for i, v in ipairs(table) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
 ---interpolates a value towards a target value.
 ---@param value number
 ---@param target number
@@ -54,6 +67,10 @@ end
 ---@return boolean
 function is_valid(entity)
     return entity and entity.is_valid
+end
+
+function is_valid_component(component)
+    return component and component.is_valid
 end
 
 ---if an entity has a health component, apply damage to it.
@@ -95,6 +112,90 @@ function map_to_range(value, in_min, in_max, out_min, out_max)
     return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 end
 
+---finds a resource entity with a given name.
+---@param resource_name string
+---@return entity|nil
+function find_resource_with_name(resource_name)
+    local entities = world:find_all_entities_with_component(ResourceComponent)
+    for i, entity in ipairs(entities) do
+        if entity:find_component_of_type(ResourceComponent).resource_name == resource_name then
+            return entity
+        end
+    end
+
+    return nil
+end
+
+---gets the resource component of an entity.
+---@param entity entity
+---@return component|nil
+function get_resource_component(entity)
+    if is_valid(entity) == false then
+        return nil
+    end
+    return entity:find_component_of_type(ResourceComponent)
+end
+
+-- Finds a resource that can be harvested for the given item
+function find_resource_that_drops_item(item_name)
+    local entities = world:find_all_entities_with_component(ResourceComponent)
+    for i, entity in ipairs(entities) do
+        local resource_component = entity:find_component_of_type(ResourceComponent)
+        if table_contains(resource_component.harvested_resources , item_name) then
+            return entity
+        end
+    end
+
+    return nil
+end
+
+-- Finds all resources that can be harvested for the given item
+function find_resources_that_drop_item(item_name)
+    local entities = world:find_all_entities_with_component(ResourceComponent)
+    local resources = {}
+    for i, entity in ipairs(entities) do
+        local resource_component = entity:find_component_of_type(ResourceComponent)
+        if table_contains(resource_component.harvested_resources , item_name) then
+            table.insert(resources, entity)
+        end
+    end
+
+    return resources
+end
+
+-- Finds closest resource that can be harvested for the given item
+function find_closest_resource_that_drops_item(item_name, x, y)
+    local entities = find_resources_that_drop_item(item_name)
+    local closest_entity = nil
+    local closest_distance = 9999999999
+    for i, entity in ipairs(entities) do
+        local distance = v2_len(v2_sub({ x, y }, { entity.x, entity.y }))
+        if distance < closest_distance then
+            closest_entity = entity
+            closest_distance = distance
+        end
+    end
+
+    return closest_entity
+end
+
+
+---gets the building component of an entity.
+---@param entity entity
+---@return component|nil
+function get_building_component(entity)
+    if is_valid(entity) == false then
+        return nil
+    end
+    return entity:find_component_of_type(BuildingComponent)
+end
+
+-- get dude manager component
+function get_dude_manager_component()
+    return dude_manager:find_component_of_type(DudeManagerComponent)
+end
+
+
 --- :v2
 
 ---returns v2 a + b.
@@ -121,6 +222,13 @@ function v2_mul(a, b)
     return { a[1] * b[1], a[2] * b[2] }
 end
 
+---returns v2 len
+---@param a any {number, number}
+---@return number
+function v2_len(a)
+    return math.sqrt(a[1] * a[1] + a[2] * a[2])
+end
+
 --- :sound related
 
 --- plays a sound, with its volume determined by camera distance/zoom
@@ -134,3 +242,5 @@ function play_sound(sound, x, y, audible_distance)
     sound:setVolume(volume)
     sound:play()
 end
+
+

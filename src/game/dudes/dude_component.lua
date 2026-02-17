@@ -44,16 +44,24 @@ function dude_component:new(entity)
     self.last_name = "McDuderson"
     self.status = "None"
 
+    self.goal = nil
+    self.work = nil
+
     self.held = nil
     self.last_held = nil
 
     self.hunger = 100
     self.tiredness = 100
 
+
+    dude_manager:find_component_of_type(DudeManagerComponent):refresh_dudes(self)
     return dude_component
 end
 
 function dude_component:tick(dt)
+    self.ai_mover.goal = self.goal
+
+
     if self.held then
         if self.held ~= self.last_held then
             if self.held then
@@ -90,6 +98,8 @@ function dude_component:destroy()
         self:on_drop(self.held)
         self.held = nil
     end
+
+    dude_manager:find_component_of_type(DudeManagerComponent):refresh_dudes(self)
 end
 
 function dude_component:on_death()

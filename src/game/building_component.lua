@@ -10,7 +10,14 @@ setmetatable(building_component, {
     __index = component
 })
 
-function building_component:new(entity, tags)
+
+---comment
+---@param entity entity owner of the component
+---@param tags table<string> string of tags for this building
+---@param incompatible_tags table<string> string of tags that this building cannot be onto the same tile
+---@param required_resources table<string> resource names required to build this building
+---@return nil
+function building_component:new(entity, tags, incompatible_tags, required_resources)
     local self = component:new(entity)
     setmetatable(self, building_component)
 
@@ -18,7 +25,7 @@ function building_component:new(entity, tags)
 
 
     self.tags = tags or { "building" }
-    self.incompatible_tags = { "building" }
+    self.incompatible_tags = incompatible_tags or { "building" }
 
     -- : check for incompatible buildings
     local entities = world:find_entities_at(entity.x, entity.y)
@@ -43,19 +50,53 @@ function building_component:new(entity, tags)
         return nil
     end
 
-    print(self.sprite_component)
-
     sfx_place_object:play()
 
     -- :setup sprite_component
     self.sprite_component.white = true
     self.sprite_component.tint = { 1.0, 1.0, 1.0, 0.1 }
     self.sprite_component.blink = true
-    self.sprite_component.blink_min = 0.1
-    self.sprite_component.blink_max = 0.5
 
+    self.required_resources = required_resources or {}
+    self.given_resources = {}
 
     return building_component
+end
+
+function building_component:get_next_material()
+    for i, resource in ipairs(self.required_resources) do
+        if self.given_resources[resource] == nil then
+            return resource
+        end
+    end
+    return nil
+end
+
+function building_component:add_material(resource)
+    -- remove the resource from the required resources
+    for i, required_resource in ipairs(self.required_resources) do
+        if required_resource == resource.name then
+            table.remove(self.required_resources, i)
+            break
+        end
+    end
+
+    print("Building Component: Added resource: ", resource.name)
+
+    -- if we have all the resources, build the building
+    if #self.required_resources == 0 then
+        self:built()
+    end
+end
+
+function building_component:built()
+    self.sprite_component.white = false
+    self.sprite_component.tint = { 1.0, 1.0, 1.0, 1.0 }
+    self.sprite_component.blink = false
+
+    print("Building Component: Built")
+    self.is_valid = false
+    self:destroy()
 end
 
 function building_component:has_any_tag(tags)
