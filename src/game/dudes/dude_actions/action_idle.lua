@@ -1,5 +1,6 @@
 local action_idle = {
     name = "idle",
+    min_duration = 0,
 }
 
 function action_idle:score(dude)

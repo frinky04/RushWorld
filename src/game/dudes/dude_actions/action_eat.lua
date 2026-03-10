@@ -1,5 +1,6 @@
 local action_eat = {
     name = "eat",
+    min_duration = 1.0,
 }
 
 local STAGE_PLAN = "plan"

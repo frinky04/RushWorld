@@ -1,5 +1,6 @@
 local action_wander = {
     name = "wander",
+    min_duration = 0.6,
 }
 
 function action_wander:score(dude)

@@ -1,6 +1,23 @@
 -- -- Libs
 local component = require("src.core.component")
 
+local HUNGER_DRAIN_RATE = 1.0
+local TIREDNESS_DRAIN_RATE = 0.75
+local SLEEP_RECOVERY_RATE = 6.0
+
+local DUDE_SLEEPING_SPRITE = nil
+
+local function get_sleeping_sprite()
+    if DUDE_SLEEPING_SPRITE == nil and love and love.graphics then
+        local primary_path = "assets/sprites/dude_sleep.png"
+        local fallback_path = "assets/sprites/dude_resting.png"
+        local sprite_path = love.filesystem.getInfo(primary_path) and primary_path or fallback_path
+        DUDE_SLEEPING_SPRITE = love.graphics.newImage(sprite_path)
+    end
+
+    return DUDE_SLEEPING_SPRITE
+end
+
 ---- AI Mover Component
 
 local dude_component = {}
@@ -43,6 +60,21 @@ function dude_component:new(entity)
     end
     self.health_death_callback_id = self.health:register_death_callback(self.on_death, self)
 
+    self.sprite = entity:find_component_of_type(SpriteComponent)
+    self.default_sprite = nil
+    self.default_pivot = nil
+    self.default_render_offset_x = 0
+    self.default_render_offset_y = 0
+    self.sleeping_sprite = nil
+
+    if self.sprite then
+        self.default_sprite = self.sprite.sprite
+        self.default_pivot = self.sprite.pivot
+        self.default_render_offset_x = self.sprite.render_offset_x
+        self.default_render_offset_y = self.sprite.render_offset_y
+        self.sleeping_sprite = get_sleeping_sprite()
+    end
+
     self.first_name = "Dude"
     self.last_name = "McDuderson"
     self.status = "None"
@@ -63,6 +95,7 @@ end
 
 function dude_component:tick(dt)
     self.ai_mover.goal = self.goal
+    self:update_pose()
 
     if self.held ~= self.last_held then
         if self.last_held then
@@ -84,13 +117,20 @@ end
 function dude_component:update(dt)
     if self.text then
         self.text.text = self.status ..
-            "\nHunger: " .. math.ceil(self.hunger) .. "\nHealth: " .. math.ceil(self.health.health)
+            "\nHunger: " .. math.ceil(self.hunger) ..
+            "\nTired: " .. math.ceil(self.tiredness) ..
+            "\nHealth: " .. math.ceil(self.health.health)
     end
-    -- update stats
-    self.hunger = self.hunger - dt
+
+    self.hunger = self.hunger - (dt * HUNGER_DRAIN_RATE)
     if self.hunger < 0 then
         self.health:take_damage(dt * 2)
         self.hunger = 0
+    end
+
+    self.tiredness = self.tiredness - (dt * TIREDNESS_DRAIN_RATE)
+    if self.tiredness < 0 then
+        self.tiredness = 0
     end
 end
 
@@ -133,6 +173,33 @@ function dude_component:eat(entity)
     end
 
     food_component:on_eaten(self)
+end
+
+function dude_component:sleep(dt)
+    self.tiredness = self.tiredness + (dt * SLEEP_RECOVERY_RATE)
+    if self.tiredness > 100 then
+        self.tiredness = 100
+    end
+end
+
+function dude_component:update_pose()
+    if not self.sprite or not self.default_sprite then
+        return
+    end
+
+    local is_sleeping = self.brain and self.brain.current_action and self.brain.current_action.name == "sleep"
+    if is_sleeping and self.sleeping_sprite then
+        self.sprite.sprite = self.sleeping_sprite
+        self.sprite.pivot = SPRITE_PIVOT.CENTER_CENTER
+        self.sprite.render_offset_x = self.default_render_offset_x
+        self.sprite.render_offset_y = self.default_render_offset_y
+        return
+    end
+
+    self.sprite.sprite = self.default_sprite
+    self.sprite.pivot = self.default_pivot
+    self.sprite.render_offset_x = self.default_render_offset_x
+    self.sprite.render_offset_y = self.default_render_offset_y
 end
 
 function dude_component:on_drop(entity)

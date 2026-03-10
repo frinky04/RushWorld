@@ -1,5 +1,6 @@
 local action_work = {
     name = "work",
+    min_duration = 1.0,
 }
 
 local STAGE_PLAN = "plan"

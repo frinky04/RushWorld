@@ -4,6 +4,7 @@ local component = require("src.core.component")
 -- Action modules
 local action_idle = require("src.game.dudes.dude_actions.action_idle")
 local action_wander = require("src.game.dudes.dude_actions.action_wander")
+local action_sleep = require("src.game.dudes.dude_actions.action_sleep")
 local action_eat = require("src.game.dudes.dude_actions.action_eat")
 local action_work = require("src.game.dudes.dude_actions.action_work")
 
@@ -30,6 +31,7 @@ function dude_brain_component:new(entity)
     self.actions = {
         action_idle,
         action_wander,
+        action_sleep,
         action_eat,
         action_work,
     }
@@ -48,6 +50,14 @@ end
 
 function dude_brain_component:get_trait_modifier(action_name)
     return self.trait_modifiers[action_name] or 1.0
+end
+
+function dude_brain_component:get_action_min_duration(action)
+    if action == nil or action.min_duration == nil then
+        return 0
+    end
+
+    return action.min_duration
 end
 
 function dude_brain_component:score_action(action)
@@ -75,7 +85,28 @@ function dude_brain_component:select_best_action()
         end
     end
 
-    return best_action
+    return best_action, best_score
+end
+
+function dude_brain_component:can_switch_actions(new_action, new_score)
+    if self.current_action == nil then
+        return true
+    end
+
+    if new_action == self.current_action then
+        return false
+    end
+
+    if self.action_time < self:get_action_min_duration(self.current_action) then
+        return false
+    end
+
+    if self.current_action.can_interrupt then
+        local current_score = self:score_action(self.current_action)
+        return self.current_action:can_interrupt(self.dude, self, new_action, new_score, current_score)
+    end
+
+    return true
 end
 
 function dude_brain_component:switch_action(new_action)
@@ -108,8 +139,8 @@ function dude_brain_component:update(dt)
     end
 
     -- Evaluate and potentially switch actions
-    local best = self:select_best_action()
-    if best ~= self.current_action then
+    local best, best_score = self:select_best_action()
+    if self:can_switch_actions(best, best_score) then
         self:switch_action(best)
     end
 

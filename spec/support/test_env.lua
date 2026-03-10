@@ -32,6 +32,20 @@ function test_env.make_entity(fields)
         entity.is_valid = true
     end
 
+    function entity:add_component(component)
+        table.insert(self.components, component)
+        return component
+    end
+
+    function entity:remove_component(component)
+        for index, other in ipairs(self.components) do
+            if other == component then
+                table.remove(self.components, index)
+                break
+            end
+        end
+    end
+
     function entity:find_component_of_type(class)
         for _, component in ipairs(self.components) do
             if component.is_valid and component.__class == class then
@@ -55,6 +69,7 @@ function test_env.reset_globals()
     _G.ResourceComponent = {}
     _G.BuildingComponent = {}
     _G.DudeManagerComponent = {}
+    _G.DudeComponent = {}
     _G.dude_manager = nil
 
     _G.world = {

@@ -58,6 +58,7 @@ src/game/dudes/                       Dude AI system
   dude_actions/                       Action modules (plain tables, not classes)
     action_idle.lua                   Score 0.05. Fallback - does nothing, never completes.
     action_wander.lua                 Score 0.1. Random walk within radius 5, pause 5s on arrival.
+    action_sleep.lua                  Score scales with tiredness urgency. Sleeps in place to recover energy.
     action_eat.lua                    Score scales with hunger urgency. Find berry bush -> navigate -> eat.
     action_work.lua                   Score 0.4 when work available. Multi-step: find building -> find
                                       material or harvest resource -> pick up -> deliver.
@@ -131,13 +132,15 @@ end
 ```text
 brain:update(dt)
   -> score all actions (base * trait * mood + hysteresis)
-  -> switch to highest scorer if different
+  -> keep current action until its commitment rules allow interruption
+  -> switch to highest scorer when interruptible
   -> action:perform(dude, brain, dt) -> true means complete
 ```
 - Per-dude scratch state lives in `brain.action_state[action.name]`, cleared on switch.
 - `brain.pause_time` temporarily halts movement and evaluation.
-- `action_work` and `action_eat` now run as explicit staged sequences instead of a single `started` flag.
+- `action_sleep`, `action_work`, and `action_eat` are utility actions with per-action state owned in `brain.action_state`.
 - Reservation helpers in `src/core/util.lua` prevent multiple dudes from targeting the same pickup/harvest target.
+- Actions can expose `min_duration` and `can_interrupt(...)` to control commitment and interruption behavior.
 
 ### Death Chain
 ```text
