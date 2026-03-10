@@ -19,6 +19,7 @@ function collision_component:new(entity)
     self.collision_callbacks = {}
     self.affects_pathfinding = true
 
+    world:mark_nav_dirty()
 
     return self
 end
@@ -34,6 +35,9 @@ function collision_component:register_collision_callback(callback)
 end
 
 function collision_component:destroy()
+    if self.affects_pathfinding then
+        world:mark_nav_dirty()
+    end
 
     component.destroy(self)
 end

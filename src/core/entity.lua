@@ -166,9 +166,13 @@ function entity:move(x, y)
                 self.x = math.max(0, math.min(self.x, GRID_MAX))
                 self.y = math.max(0, math.min(self.y, GRID_MAX))
 
-                -- world:refresh_nav_collision()
+                if component.affects_pathfinding then
+                    world:mark_nav_dirty()
+                end
+
+                return true
             end
-            return
+            return false
         end
     end
 
@@ -176,12 +180,25 @@ function entity:move(x, y)
     self.y = self.y + y
 
     -- clamp to world bounds
+    self.x = math.max(0, math.min(self.x, GRID_MAX))
+    self.y = math.max(0, math.min(self.y, GRID_MAX))
+
+    return true
 end
 
 -- teleports the entity to a new position
 function entity:teleport(x, y)
+    local collision_component = self:find_component_of_type(CollisionComponent)
+
     self.x = x
     self.y = y
+
+    self.x = math.max(0, math.min(self.x, GRID_MAX))
+    self.y = math.max(0, math.min(self.y, GRID_MAX))
+
+    if collision_component and collision_component.affects_pathfinding then
+        world:mark_nav_dirty()
+    end
 end
 
 function entity:get_render_position()

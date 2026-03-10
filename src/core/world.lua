@@ -14,6 +14,8 @@ function world:new(x_size, y_size)
     self.y_size = y_size
 
     self.astar = AStar:new(x_size, y_size)
+    self.nav_collision_dirty = true
+    self.nav_collision_version = 0
 
     self.time_scale = 1
     self.world_time = 0
@@ -35,6 +37,10 @@ function world:new(x_size, y_size)
     self.entity_updated_callbacks = {} -- called when an entity is added or removed
 
     return self
+end
+
+function world:mark_nav_dirty()
+    self.nav_collision_dirty = true
 end
 
 ---adds an entity
@@ -163,7 +169,9 @@ function world:y_sort()
 end
 
 function world:update(dt)
-    self:refresh_nav_collision()
+    if self.nav_collision_dirty then
+        self:refresh_nav_collision()
+    end
 
     for i, entity in ipairs(self.entities) do
         entity:update(dt)
@@ -243,7 +251,7 @@ end
 
 function world:refresh_nav_collision()
     -- this will go through all entities, if they have a collision component, we'll mark that cell as unwalkable
-    if not self.astar.grid then
+    if not self.astar.grid or not self.nav_collision_dirty then
         return
     end
 
@@ -264,6 +272,9 @@ function world:refresh_nav_collision()
             end
         end
     end
+
+    self.nav_collision_dirty = false
+    self.nav_collision_version = self.nav_collision_version + 1
 end
 
 --- @return number x, number y

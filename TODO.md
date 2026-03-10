@@ -1,4 +1,4 @@
-# TODO — Known Technical Debt
+# TODO - Known Technical Debt
 
 ## High Priority
 
@@ -6,23 +6,20 @@
 Every component class, setup function, and utility is a global defined in `main.lua`. A typo like `SpriteComponet` silently evaluates to `nil` instead of erroring. Two files defining the same name silently overwrite each other. Consider using a module registry or at minimum `strict.lua` to catch undefined global access.
 
 ### `is_valid()` usage is inconsistent
-Some places use `if is_valid(x)`, others use `if is_valid(x) == false`, others use bare `if x then`. The `== false` pattern is subtly wrong — `is_valid(nil)` returns `nil`, and `nil == false` is `false` in Lua, so the branch is skipped. It works by accident because both are falsy, but it's a landmine. Pick one idiom and use it everywhere.
+The worst `is_valid(x) == false` cases have been cleaned up, but entity/component validity checks are still mixed between `is_valid(...)`, `is_valid_component(...)`, and bare truthiness checks. Pick one idiom per reference type and use it consistently so stale entity references stay obvious in review.
 
 ## Medium Priority
 
 ### `update()` / `tick()` naming is backwards
-In most engines, "tick" = fixed timestep, "update" = per-frame. Here it's the opposite — `update(dt)` is the fixed 0.2s step and `tick(dt)` runs every frame. Confusing for anyone new to the codebase.
-
-### Death callbacks have no unregister mechanism
-`HealthComponent:register_death_callback(fn, ctx)` stores a raw function + context. If the owning component is destroyed before the entity dies, the callback fires on a dead component. There's no way to unregister a callback either.
+In most engines, "tick" = fixed timestep, "update" = per-frame. Here it's the opposite - `update(dt)` is the fixed `0.2s` step and `tick(dt)` runs every frame. Confusing for anyone new to the codebase.
 
 ### No zombie entity protection
-`entity:destroy()` sets `is_valid = false` but other entities may still hold references. The `is_valid()` guard works but is purely opt-in — miss one check and you're indexing a destroyed entity with stale data.
+`entity:destroy()` sets `is_valid = false` but other entities may still hold references. The `is_valid()` guard works but is purely opt-in - miss one check and you're indexing a destroyed entity with stale data.
 
 ## Low Priority (Scaling Concerns)
 
-### `world:refresh_nav_collision()` rebuilds every tick
-Iterates all entities with CollisionComponent and rebuilds the entire walkability grid from scratch every 0.2s. O(n) per fixed update. Fine now, will bottleneck with hundreds of entities. Could dirty-flag tiles and only update on change.
+### Dirty nav refresh still rebuilds the full grid
+`world:refresh_nav_collision()` now runs only when blockers change, which removes the constant per-step rebuild. It still repaints the whole walkability grid when it does run. If blocker churn gets high, move to tile-level dirty tracking instead of full-grid refreshes.
 
-### A* recomputed every move step
-`ai_mover_component` runs a full A* pathfind every time the move timer fires instead of caching the path and following it. With multiple dudes this stacks up. Could cache paths and only recompute when the goal changes or the path is blocked.
+### Cached A* paths still invalidate broadly
+`ai_mover_component` now caches paths and reuses them until the goal or nav version changes, but any nav rebuild invalidates the whole cached path. If moving blockers become common, path patching or more local invalidation would reduce unnecessary replans.

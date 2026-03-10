@@ -10,6 +10,14 @@ setmetatable(ai_mover_component, {
     __index = component
 })
 
+local function get_goal_position(goal)
+    if goal == nil or goal.x == nil or goal.y == nil then
+        return nil, nil
+    end
+
+    return goal.x, goal.y
+end
+
 function ai_mover_component:new(entity)
     local self = component:new(entity)
     setmetatable(self, ai_mover_component)
@@ -22,6 +30,9 @@ function ai_mover_component:new(entity)
     self.move_timer = love.math.random(0, 1000) / 1000 * self.move_delay
 
     self.path = nil
+    self.cached_goal_x = nil
+    self.cached_goal_y = nil
+    self.cached_nav_version = -1
 
     return self
 end
@@ -44,23 +55,17 @@ function ai_mover_component:attempt_move()
         return
     end
 
-    if not self.goal then
+    local goal_x, goal_y = get_goal_position(self.goal)
+    if goal_x == nil or goal_y == nil then
+        self:clear_path()
         return
     end
 
-    if not self.goal.x or not self.goal.y then
-        print("goal must have x and y")
-        return
+    if self:should_recalculate_path(goal_x, goal_y) then
+        self:recalculate_path(goal_x, goal_y)
     end
 
-    -- path to goal
-    self.path = world.astar:path(self.entity, self.goal)
-
-    if not self.path then
-        return
-    end
-
-    if #self.path < 2 then
+    if not self.path or #self.path < 2 then
         return
     end
 
@@ -77,15 +82,21 @@ function ai_mover_component:attempt_move()
         y = next.y - current.y
     }
 
-    self.entity:move(difference.x, difference.y)
+    if self.entity:move(difference.x, difference.y) then
+        table.remove(self.path, 1)
+        return
+    end
+
+    self:clear_path()
 end
 
 function ai_mover_component:is_at_goal()
-    if not self.goal then
+    local goal_x, goal_y = get_goal_position(self.goal)
+    if goal_x == nil or goal_y == nil then
         return false
     end
 
-    return self.entity.x == self.goal.x and self.entity.y == self.goal.y
+    return self.entity.x == goal_x and self.entity.y == goal_y
 end
 
 function ai_mover_component:is_at_end_of_path()
@@ -93,11 +104,57 @@ function ai_mover_component:is_at_end_of_path()
         return false
     end
 
-    if #self.path < 2 then
+    if #self.path < 1 then
         return false
     end
 
     return self.entity.x == self.path[#self.path].x and self.entity.y == self.path[#self.path].y
+end
+
+function ai_mover_component:clear_path()
+    self.path = nil
+    self.cached_goal_x = nil
+    self.cached_goal_y = nil
+    self.cached_nav_version = -1
+end
+
+function ai_mover_component:is_path_aligned()
+    return self.path ~= nil
+        and #self.path >= 1
+        and self.path[1].x == self.entity.x
+        and self.path[1].y == self.entity.y
+end
+
+function ai_mover_component:should_recalculate_path(goal_x, goal_y)
+    if self.path == nil then
+        return true
+    end
+
+    if self.cached_goal_x ~= goal_x or self.cached_goal_y ~= goal_y then
+        return true
+    end
+
+    if self.cached_nav_version ~= world.nav_collision_version then
+        return true
+    end
+
+    if not self:is_path_aligned() then
+        return true
+    end
+
+    local next_step = self.path[2]
+    if next_step and not world.astar:is_walkable(next_step.x, next_step.y) then
+        return true
+    end
+
+    return false
+end
+
+function ai_mover_component:recalculate_path(goal_x, goal_y)
+    self.path = world.astar:path(self.entity, { x = goal_x, y = goal_y }) or {}
+    self.cached_goal_x = goal_x
+    self.cached_goal_y = goal_y
+    self.cached_nav_version = world.nav_collision_version
 end
 
 function ai_mover_component:draw()
