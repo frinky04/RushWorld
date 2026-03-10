@@ -136,14 +136,18 @@ function dude_component:eat(entity)
 end
 
 function dude_component:on_drop(entity)
-    if entity then
+    if is_valid(entity) then
+        entity.held_by = nil
+        release_entity_reservation(entity, self.entity)
         entity.render_ontop = false
         print("Dude dropped " .. entity.name)
     end
 end
 
 function dude_component:on_pickup(entity)
-    if entity then
+    if is_valid(entity) then
+        entity.held_by = self.entity
+        reserve_entity(entity, self.entity)
         entity.render_ontop = true
         print("Dude picked up " .. entity.name)
     end

@@ -7,7 +7,7 @@ A colony survival game inspired by RimWorld, built with **Love2D** and **Lua**. 
 ## Features
 
 - Grid-based world (64x64) with A* pathfinding
-- Dude AI with brain states (idle, wandering, finding food, working)
+- Dude AI with utility-scored actions (idle, wandering, finding food, working)
 - Resource gathering (wood, stone, berries)
 - Building and construction system
 - Health, hunger, and needs simulation
@@ -25,6 +25,22 @@ love .
 ```
 
 Or use the included `run.bat`.
+
+## Testing
+
+Install `luarocks`, then install test dependencies into the repo-local rock tree:
+
+```bash
+luarocks --tree .rocks install busted
+```
+
+Run the test suite with:
+
+```bash
+./test.sh
+```
+
+Current coverage is focused on logic that can run headlessly, especially AI utility helpers and colonist action sequencing.
 
 ## Controls
 
@@ -46,7 +62,8 @@ src/
 ├── game/           Game-specific components and setup functions
 │   └── dudes/      Dude AI, brain, and manager
 ├── libs/           Third-party (astar, flux, heap, vector)
-└── benchmarks/     Performance benchmarks
+├── benchmarks/     Performance benchmarks
+spec/               Busted unit tests and test helpers
 assets/
 ├── sprites/        Entity sprites and clothing
 ├── sounds/         Ambience, music, and SFX

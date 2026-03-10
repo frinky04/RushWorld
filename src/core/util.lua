@@ -73,6 +73,127 @@ function is_valid_component(component)
     return component ~= nil and component.is_valid == true
 end
 
+function get_entity_reserver(entity)
+    if not is_valid(entity) then
+        return nil
+    end
+
+    if entity.reserved_by ~= nil and not is_valid(entity.reserved_by) then
+        entity.reserved_by = nil
+    end
+
+    return entity.reserved_by
+end
+
+function get_entity_holder(entity)
+    if not is_valid(entity) then
+        return nil
+    end
+
+    if entity.held_by ~= nil and not is_valid(entity.held_by) then
+        entity.held_by = nil
+    end
+
+    return entity.held_by
+end
+
+function is_entity_reserved_by_other(entity, reserver)
+    local current_reserver = get_entity_reserver(entity)
+    return current_reserver ~= nil and current_reserver ~= reserver
+end
+
+function is_entity_held(entity)
+    return get_entity_holder(entity) ~= nil
+end
+
+function is_entity_available(entity, reserver)
+    if not is_valid(entity) then
+        return false
+    end
+
+    if is_entity_held(entity) then
+        return false
+    end
+
+    if is_entity_reserved_by_other(entity, reserver) then
+        return false
+    end
+
+    return true
+end
+
+function reserve_entity(entity, reserver)
+    if not is_entity_available(entity, reserver) then
+        return false
+    end
+
+    entity.reserved_by = reserver
+    return true
+end
+
+function release_entity_reservation(entity, reserver)
+    if not is_valid(entity) then
+        return false
+    end
+
+    local current_reserver = get_entity_reserver(entity)
+    if current_reserver == nil then
+        return false
+    end
+
+    if reserver == nil or current_reserver == reserver then
+        entity.reserved_by = nil
+        return true
+    end
+
+    return false
+end
+
+function is_position_adjacent(x1, y1, x2, y2)
+    return math.abs(x1 - x2) + math.abs(y1 - y2) == 1
+end
+
+function is_position_at_or_adjacent(x1, y1, x2, y2)
+    return math.abs(x1 - x2) + math.abs(y1 - y2) <= 1
+end
+
+function find_best_interaction_position(target, actor, include_target)
+    if target == nil or actor == nil or target.x == nil or target.y == nil or actor.x == nil or actor.y == nil then
+        return nil
+    end
+
+    local best_position = nil
+    local best_distance = math.huge
+
+    local function try_position(x, y)
+        if x < 0 or x > GRID_MAX or y < 0 or y > GRID_MAX then
+            return
+        end
+
+        local walkable = world.astar:is_walkable(x, y) or (actor.x == x and actor.y == y)
+        if not walkable then
+            return
+        end
+
+        local distance = math.abs(actor.x - x) + math.abs(actor.y - y)
+        if distance < best_distance then
+            best_distance = distance
+            best_position = { x = x, y = y }
+        end
+    end
+
+    if include_target then
+        try_position(target.x, target.y)
+    end
+
+    try_position(target.x, target.y - 1)
+    try_position(target.x + 1, target.y)
+    try_position(target.x, target.y + 1)
+    try_position(target.x - 1, target.y)
+
+    return best_position
+end
+
 ---if an entity has a health component, apply damage to it.
 ---@param entity entity
 ---@param damage number
@@ -173,6 +294,41 @@ function find_closest_resource_that_drops_item(item_name, x, y)
         if distance < closest_distance then
             closest_entity = entity
             closest_distance = distance
+        end
+    end
+
+    return closest_entity
+end
+
+function find_nearest_available_entity_by_name(name, x, y, reserver)
+    local closest_entity = nil
+    local closest_distance = math.huge
+
+    for i, entity in ipairs(world.entities) do
+        if is_valid(entity) and entity.name == name and is_entity_available(entity, reserver) then
+            local distance = math.abs(entity.x - x) + math.abs(entity.y - y)
+            if distance < closest_distance then
+                closest_entity = entity
+                closest_distance = distance
+            end
+        end
+    end
+
+    return closest_entity
+end
+
+function find_closest_available_resource_that_drops_item(item_name, x, y, reserver)
+    local entities = find_resources_that_drop_item(item_name)
+    local closest_entity = nil
+    local closest_distance = math.huge
+
+    for i, entity in ipairs(entities) do
+        if is_entity_available(entity, reserver) then
+            local distance = v2_len(v2_sub({ x, y }, { entity.x, entity.y }))
+            if distance < closest_distance then
+                closest_entity = entity
+                closest_distance = distance
+            end
         end
     end
 

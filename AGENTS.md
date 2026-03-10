@@ -1,16 +1,28 @@
-# Agent Instructions
+# AGENTS.md
 
 > Start here: read `STRUCTURE.md` before making code changes. It has the current file map, engine flow, and the important globals this project relies on. If your work changes architecture or code organization, update `STRUCTURE.md` too.
+
+## Task Completion Requirements
+
+- Run `./test.sh` for headless logic changes when the affected code is covered by the Busted suite.
+- Run `love .` for gameplay/integration changes before considering the task complete.
 
 ## Runtime
 - Love2D game built with Lua
 - Run: `love .` or `run.bat`
 - Entry points: `main.lua`, `conf.lua`
 
+## Project Snapshot
+
+A colony survival game inspired by RimWorld, built with **Love2D** and **Lua**. The twist: shorter, roguelike-style runs where you manage a group of "dudes" and try to survive as long as possible.
+
+This repository is a VERY EARLY WIP. Proposing sweeping changes that improve long-term maintainability is encouraged.
+
 ## Validation
-- There is no formal automated test suite in this repo.
-- Validate changes by running the game and exercising the affected systems in-engine.
+- There is a repo-local Busted test suite for headless logic checks. Run it with `./test.sh`.
+- The test suite currently covers isolated logic only. Validate gameplay changes by running the game and exercising the affected systems in-engine.
 - If you touch AI, pathfinding, movement, or construction, test at multiple time scales (`1`, `2`, `8`, `32`) because logic runs on a fixed step and visuals run per-frame.
+- If `./test.sh` fails for logic you changed, fix the tests or the code before wrapping up.
 
 ## Architecture
 - Custom ECS in `src/core/`: `Entity`, `Component`, `World`

@@ -9,6 +9,7 @@ Colony survival game built with **Love2D** and **Lua**. Dudes (colonists) surviv
 ```text
 main.lua                              Entry point. Loads globals, spawns world entities, drives Love2D callbacks.
 conf.lua                              Love2D config: vsync, MSAA, resizable window, icon.
+test.sh                               Repo-local test runner. Executes `.rocks/bin/busted spec`.
 
 src/core/
   entity.lua                          Entity class. Holds x,y,name,components. Manages component lifecycle,
@@ -67,6 +68,14 @@ src/libs/                             Third-party libraries
   heap.lua                            Binary min-heap for A* priority queue.
   vector.lua                          2D vector with operator overloads.
   flux.lua                            Tweening library (included, not actively used).
+
+spec/                                 Headless unit tests run with Busted
+  support/
+    test_env.lua                      Minimal global/game stubs for loading logic modules without booting Love.
+  core/
+    util_spec.lua                     Tests reservation helpers and interaction-position utility logic.
+  game/dudes/
+    action_work_spec.lua              Tests staged work planning, material reservation, pickup, and delivery.
 
 assets/
   sprites/                            Entity sprites (16x16 pixel art). Includes clothing/ stubs.
@@ -127,6 +136,8 @@ brain:update(dt)
 ```
 - Per-dude scratch state lives in `brain.action_state[action.name]`, cleared on switch.
 - `brain.pause_time` temporarily halts movement and evaluation.
+- `action_work` and `action_eat` now run as explicit staged sequences instead of a single `started` flag.
+- Reservation helpers in `src/core/util.lua` prevent multiple dudes from targeting the same pickup/harvest target.
 
 ### Death Chain
 ```text
