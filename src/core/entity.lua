@@ -123,8 +123,16 @@ end
 function entity:destroy()
     world:remove_entity(self)
 
-    for i, component in ipairs(self.components) do
+    while #self.components > 0 do
+        local last_index = #self.components
+        local component = self.components[last_index]
         component:destroy()
+
+        -- Fail-safe: avoid an infinite loop if a custom destroy() forgets
+        -- to call component.destroy(self) and remove itself.
+        if #self.components == last_index then
+            table.remove(self.components, last_index)
+        end
     end
 end
 

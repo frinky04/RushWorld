@@ -35,7 +35,7 @@ function action_eat:perform(dude, brain, dt)
 
     dude.status = "Moving to food"
 
-    if is_valid(dude.goal) == false then
+    if not is_valid(dude.goal) then
         dude.goal = nil
         brain.pause_time = 1
         return true

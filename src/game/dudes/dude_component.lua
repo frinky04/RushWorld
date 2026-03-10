@@ -21,6 +21,7 @@ function dude_component:new(entity)
     if not self.brain then
         print("DudeComponent requires a DudeBrainComponent, removing self")
         self:destroy()
+        return nil
     end
     self.brain.dude = self
 
@@ -29,6 +30,7 @@ function dude_component:new(entity)
     if not self.ai_mover then
         print("DudeComponent requires an AI_MovementComponent, removing self")
         self:destroy()
+        return nil
     end
 
     self.text = entity:find_component_of_type(TextComponent)
@@ -37,8 +39,9 @@ function dude_component:new(entity)
     if not self.health then
         print("DudeComponent requires a HealthComponent, removing self")
         self:destroy()
+        return nil
     end
-    self.health:register_death_callback(self.on_death, self)
+    self.health_death_callback_id = self.health:register_death_callback(self.on_death, self)
 
     self.first_name = "Dude"
     self.last_name = "McDuderson"
@@ -92,12 +95,18 @@ function dude_component:update(dt)
 end
 
 function dude_component:destroy()
+    if is_valid_component(self.health) and self.health_death_callback_id then
+        self.health:unregister_death_callback(self.health_death_callback_id)
+        self.health_death_callback_id = nil
+    end
+
     if self.held then
         self:on_drop(self.held)
         self.held = nil
     end
 
     dude_manager:find_component_of_type(DudeManagerComponent):refresh_dudes(self)
+    component.destroy(self)
 end
 
 function dude_component:on_death()
@@ -107,7 +116,7 @@ function dude_component:on_death()
 end
 
 function dude_component:eat(entity)
-    if is_valid(entity) == false then
+    if not is_valid(entity) then
         return
     end
 

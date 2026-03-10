@@ -30,7 +30,7 @@ function action_work:perform(dude, brain, dt)
     local state = brain.action_state[self.name]
 
     -- check if building is complete or no longer valid
-    if is_valid_component(get_building_component(dude.work)) == false or is_valid(dude.work) == false then
+    if not is_valid(dude.work) or not is_valid_component(get_building_component(dude.work)) then
         dude.goal = nil
         dude.work = nil
         state.harvest = nil

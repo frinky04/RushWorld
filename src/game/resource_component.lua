@@ -28,7 +28,7 @@ function resource_component:new(entity, resource_name, harvested_resources, drop
     end
 
     if (self.health_component) then
-        self.health_component:register_death_callback(self.on_death, self)
+        self.health_callback_id = self.health_component:register_death_callback(self.on_death, self)
     end
 
     self.name = "Resource Component"
@@ -38,11 +38,11 @@ function resource_component:new(entity, resource_name, harvested_resources, drop
     self.min_drop = 1
     self.max_drop = 1
 
-    return resource_component
+    return self
 end
 
 function resource_component:on_death()
-    if self.dropped_resources_setup_functions then
+    if self.dropped_resources_setup_functions and #self.dropped_resources_setup_functions > 0 then
         local num_drops = love.math.random(self.min_drop, self.max_drop)
         for i = 1, num_drops do
 
@@ -53,6 +53,14 @@ function resource_component:on_death()
             end
         end
     end
+end
+
+function resource_component:destroy()
+    if is_valid_component(self.health_component) and self.health_callback_id then
+        self.health_component:unregister_death_callback(self.health_callback_id)
+        self.health_callback_id = nil
+    end
+    component.destroy(self)
 end
 
 return resource_component

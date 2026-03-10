@@ -66,11 +66,11 @@ end
 ---@param entity entity
 ---@return boolean
 function is_valid(entity)
-    return entity and entity.is_valid
+    return entity ~= nil and entity.is_valid == true
 end
 
 function is_valid_component(component)
-    return component and component.is_valid
+    return component ~= nil and component.is_valid == true
 end
 
 ---if an entity has a health component, apply damage to it.
@@ -130,7 +130,7 @@ end
 ---@param entity entity
 ---@return component|nil
 function get_resource_component(entity)
-    if is_valid(entity) == false then
+    if not is_valid(entity) then
         return nil
     end
     return entity:find_component_of_type(ResourceComponent)
@@ -184,7 +184,7 @@ end
 ---@param entity entity
 ---@return component|nil
 function get_building_component(entity)
-    if is_valid(entity) == false then
+    if not is_valid(entity) then
         return nil
     end
     return entity:find_component_of_type(BuildingComponent)

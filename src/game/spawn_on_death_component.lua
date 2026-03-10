@@ -22,8 +22,9 @@ function spawn_on_death_component:new(entity, setup_function, spawned_entity_nam
     if not self.health_component then
         print("SpawnOnDeathComponent requires a HealthComponent, removing self")
         entity:destroy()
+        return nil
     end
-    self.health_component:register_death_callback(self.on_death, self)
+    self.health_callback_id = self.health_component:register_death_callback(self.on_death, self)
 
     self.name = "Spawn On Death Component"
     self.setup_function = setup_function
@@ -36,6 +37,14 @@ function spawn_on_death_component:on_death()
     if self.setup_function then
         Entity:new(self.entity.x, self.entity.y, self.spawned_entity_name, self.setup_function)
     end
+end
+
+function spawn_on_death_component:destroy()
+    if is_valid_component(self.health_component) and self.health_callback_id then
+        self.health_component:unregister_death_callback(self.health_callback_id)
+        self.health_callback_id = nil
+    end
+    component.destroy(self)
 end
 
 return spawn_on_death_component

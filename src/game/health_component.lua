@@ -24,6 +24,7 @@ function health_component:new(entity, health)
 
     self.name = "Health Component"
     self.death_callbacks = {}
+    self.next_death_callback_id = 1
     self.last_damaged_by = nil
     self.health = health or 100
 
@@ -47,15 +48,49 @@ function health_component:die()
 end
 
 function health_component:register_death_callback(callback, component_calling)
-    table.insert(self.death_callbacks, {callback, component_calling})
+    local callback_id = self.next_death_callback_id
+    self.next_death_callback_id = self.next_death_callback_id + 1
+
+    table.insert(self.death_callbacks, {
+        id = callback_id,
+        fn = callback,
+        ctx = component_calling
+    })
+
+    return callback_id
+end
+
+function health_component:unregister_death_callback(callback_id)
+    if callback_id == nil then
+        return false
+    end
+
+    for i, callback in ipairs(self.death_callbacks) do
+        if callback.id == callback_id then
+            table.remove(self.death_callbacks, i)
+            return true
+        end
+    end
+
+    return false
 end
 
 function health_component:handle_death()
-    for i, callback in ipairs(self.death_callbacks) do
-        callback[1](callback[2])
+    local callbacks = self.death_callbacks
+    self.death_callbacks = {}
+
+    for i, callback in ipairs(callbacks) do
+        if callback.fn and (callback.ctx == nil or is_valid_component(callback.ctx)) then
+            callback.fn(callback.ctx)
+        end
     end
 
     self.entity:destroy()
+end
+
+function health_component:destroy()
+    self.death_callbacks = {}
+    component.destroy(self)
 end
 
 return health_component

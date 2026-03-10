@@ -132,6 +132,8 @@ health <= 0 → HealthComponent:handle_death()
   → death callbacks (SpawnOnDeathComponent, ResourceComponent, DudeComponent)
   → entity:destroy() → removed from world, is_valid = false
 ```
+- `HealthComponent:register_death_callback(fn, ctx)` now returns a callback id.
+- Components that subscribe should store that id and call `HealthComponent:unregister_death_callback(id)` in `destroy()` to avoid stale callback targets.
 
 ### World Query Methods
 | Method | Returns |

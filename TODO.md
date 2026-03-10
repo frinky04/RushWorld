@@ -21,9 +21,6 @@ In most engines, "tick" = fixed timestep, "update" = per-frame. Here it's the op
 
 ## Low Priority (Scaling Concerns)
 
-### `setup_functions.lua` is monolithic
-Every entity type lives in one file. As entity variety grows this becomes a merge-conflict magnet. Could split into per-category files (e.g. `setup_resources.lua`, `setup_buildings.lua`, `setup_dudes.lua`).
-
 ### `world:refresh_nav_collision()` rebuilds every tick
 Iterates all entities with CollisionComponent and rebuilds the entire walkability grid from scratch every 0.2s. O(n) per fixed update. Fine now, will bottleneck with hundreds of entities. Could dirty-flag tiles and only update on change.
 
