@@ -50,9 +50,9 @@ function collision_component:can_move(x, y)
     local new_y = self.entity.y + y
 
     for i, entity in ipairs(world.entities) do
-        if entity ~= self.entity then
+        if is_valid(entity) and entity ~= self.entity then
             for j, component in ipairs(entity.components) do
-                if component:is_a(collision_component) then
+                if is_valid_component(component) and component:is_a(collision_component) then
                     if new_x == entity.x and new_y == entity.y then
                         self:on_collision(entity)
                         component:on_collision(self.entity)

@@ -47,6 +47,10 @@ end
 ---@param entity any  entity to add
 ---@return any entity entity added
 function world:add_entity(entity)
+    if not is_valid(entity) then
+        return entity
+    end
+
     -- print("Entity " .. tostring(entity) .. " added to world (" .. entity.x .. ", " .. entity.y .. ")")
 
     table.insert(self.entities, entity)
@@ -56,10 +60,12 @@ end
 function world:find_all_entities_with_component(component_type)
     local entities = {}
     for i, entity in ipairs(self.entities) do
-        for j, component in ipairs(entity.components) do
-            if component:is_a(component_type) and is_valid_component(component) then
-                table.insert(entities, entity)
-                break
+        if is_valid(entity) then
+            for j, component in ipairs(entity.components) do
+                if is_valid_component(component) and component:is_a(component_type) then
+                    table.insert(entities, entity)
+                    break
+                end
             end
         end
     end
@@ -72,7 +78,7 @@ end
 ---@return any entity entity found
 function world:find_entity_by_name(name)
     for i, entity in ipairs(self.entities) do
-        if entity.name == name then
+        if is_valid(entity) and entity.name == name then
             return entity
         end
     end
@@ -87,7 +93,7 @@ function world:find_nearest_entity_by_name(name, x, y)
     local closest_entity = nil
     local closest_distance = 999999999
     for i, entity in ipairs(self.entities) do
-        if entity.name == name then
+        if is_valid(entity) and entity.name == name then
             local distance = math.abs(entity.x - x) + math.abs(entity.y - y)
             if distance < closest_distance then
                 closest_entity = entity
@@ -101,10 +107,12 @@ end
 
 function world:find_entity_at(x, y)
     for i, entity in ipairs(self.entities) do
-        local en_x = round(entity.x)
-        local en_y = round(entity.y)
-        if en_x == x and en_y == y then
-            return entity
+        if is_valid(entity) then
+            local en_x = round(entity.x)
+            local en_y = round(entity.y)
+            if en_x == x and en_y == y then
+                return entity
+            end
         end
     end
 end
@@ -112,10 +120,12 @@ end
 function world:find_entities_at(x, y)
     local entities = {}
     for i, entity in ipairs(self.entities) do
-        local en_x = round(entity.x)
-        local en_y = round(entity.y)
-        if en_x == x and en_y == y then
-            table.insert(entities, entity)
+        if is_valid(entity) then
+            local en_x = round(entity.x)
+            local en_y = round(entity.y)
+            if en_x == x and en_y == y then
+                table.insert(entities, entity)
+            end
         end
     end
     return entities
@@ -133,21 +143,32 @@ end
 ---removes an entity
 ---@param entity any entity to remove
 function world:remove_entity(entity)
+    if not is_valid(entity) then
+        return false
+    end
+
     -- print("Entity " .. tostring(entity) .. " removed from world")
 
     for i, e in ipairs(self.entities) do
         if e == entity then
             table.remove(self.entities, i)
-            setmetatable(entity, nil)
             entity.is_valid = false
-            entity = nil
-            return
+            return true
         end
     end
+
+    entity.is_valid = false
+    return false
 end
 
 function world:y_sort()
     table.sort(self.entities, function(a, b)
+        local a_valid = is_valid(a)
+        local b_valid = is_valid(b)
+        if a_valid ~= b_valid then
+            return a_valid
+        end
+
         -- if render_ontop = true, render on top
         if a.render_ontop and not b.render_ontop then
             return false
@@ -174,7 +195,9 @@ function world:update(dt)
     end
 
     for i, entity in ipairs(self.entities) do
-        entity:update(dt)
+        if is_valid(entity) then
+            entity:update(dt)
+        end
     end
 end
 
@@ -182,7 +205,9 @@ function world:tick(dt)
     self.world_time = self.world_time + dt
 
     for i, entity in ipairs(self.entities) do
-        entity:tick(dt)
+        if is_valid(entity) then
+            entity:tick(dt)
+        end
     end
 
     -- lerp camera
@@ -218,7 +243,9 @@ function world:draw()
     end
 
     for i, entity in ipairs(self.entities) do
-        entity:draw()
+        if is_valid(entity) then
+            entity:draw()
+        end
     end
 end
 
@@ -228,13 +255,17 @@ end
 
 function world:keypressed(key, scancode, isrepeat)
     for i, entity in ipairs(self.entities) do
-        entity:key_input(key, scancode, isrepeat, true)
+        if is_valid(entity) then
+            entity:key_input(key, scancode, isrepeat, true)
+        end
     end
 end
 
 function world:keyreleased(key, scancode)
     for i, entity in ipairs(self.entities) do
-        entity:key_input(key, scancode, false, false)
+        if is_valid(entity) then
+            entity:key_input(key, scancode, false, false)
+        end
     end
 end
 
@@ -264,10 +295,12 @@ function world:refresh_nav_collision()
 
     -- Get all entities with collision components
     for i, entity in ipairs(self.entities) do
-        for j, component in ipairs(entity.components) do
-            if component:is_a(CollisionComponent) then
-                if component.affects_pathfinding then
-                    self.astar:set_walkable(entity.x, entity.y, false)
+        if is_valid(entity) then
+            for j, component in ipairs(entity.components) do
+                if is_valid_component(component) and component:is_a(CollisionComponent) then
+                    if component.affects_pathfinding then
+                        self.astar:set_walkable(entity.x, entity.y, false)
+                    end
                 end
             end
         end

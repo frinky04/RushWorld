@@ -42,12 +42,20 @@ function entity:new(x, y, name, setup_function)
 end
 
 function entity:add_component(component)
+    if not self.is_valid then
+        return component
+    end
+
     -- print("Component " .. tostring(component) .. " added to entity " .. tostring(self))
     table.insert(self.components, component)
     return component
 end
 
 function entity:remove_component(component)
+    if not self.is_valid then
+        return
+    end
+
     for i, comp in ipairs(self.components) do
         if comp == component then
             table.remove(self.components, i)
@@ -60,9 +68,13 @@ end
 ---@param class component
 ---@return table components
 function entity:find_all_components_of_type(class)
+    if not self.is_valid then
+        return {}
+    end
+
     local components = {}
     for i, component in ipairs(self.components) do
-        if component:is_a(class) then
+        if is_valid_component(component) and component:is_a(class) then
             table.insert(components, component)
         end
     end
@@ -73,8 +85,12 @@ end
 ---@param class component
 ---@return table|nil components
 function entity:find_component_of_type(class)
+    if not self.is_valid then
+        return nil
+    end
+
     for i, component in ipairs(self.components) do
-        if component:is_a(class) then
+        if is_valid_component(component) and component:is_a(class) then
             return component
         end
     end
@@ -83,8 +99,12 @@ function entity:find_component_of_type(class)
 end
 
 function entity:find_component(name)
+    if not self.is_valid then
+        return nil
+    end
+
     for i, component in ipairs(self.components) do
-        if component.name == name then
+        if is_valid_component(component) and component.name == name then
             return component
         end
     end
@@ -95,8 +115,12 @@ function entity:__tostring()
 end
 
 function entity:draw()
+    if not self.is_valid then
+        return
+    end
+
     for i, component in ipairs(self.components) do
-        if component.enabled then
+        if is_valid_component(component) and component.enabled then
             component:draw()
         end
     end
@@ -104,8 +128,12 @@ end
 
 -- Called every game update
 function entity:update(dt)
+    if not self.is_valid then
+        return
+    end
+
     for i, component in ipairs(self.components) do
-        if component.enabled then
+        if is_valid_component(component) and component.enabled then
             component:update(dt)
         end
     end
@@ -113,20 +141,32 @@ end
 
 -- Called every game tick (usually per frame)
 function entity:tick(dt)
+    if not self.is_valid then
+        return
+    end
+
     for i, component in ipairs(self.components) do
-        if component.enabled then
+        if is_valid_component(component) and component.enabled then
             component:tick(dt)
         end
     end
 end
 
 function entity:destroy()
+    if not self.is_valid then
+        return
+    end
+
     world:remove_entity(self)
 
     while #self.components > 0 do
         local last_index = #self.components
         local component = self.components[last_index]
-        component:destroy()
+        if is_valid_component(component) then
+            component:destroy()
+        else
+            table.remove(self.components, last_index)
+        end
 
         -- Fail-safe: avoid an infinite loop if a custom destroy() forgets
         -- to call component.destroy(self) and remove itself.
@@ -147,8 +187,12 @@ end
 ---@param ispressed boolean is pressed
 ---@return nil
 function entity:key_input(key, scancode, isrepeat, ispressed)
+    if not self.is_valid then
+        return
+    end
+
     for i, component in ipairs(self.components) do
-        if component.enabled then
+        if is_valid_component(component) and component.enabled then
             component:key_input(key, scancode, isrepeat, ispressed)
         end
     end
@@ -156,9 +200,13 @@ end
 
 -- moves the entity, taking into account collision
 function entity:move(x, y)
+    if not self.is_valid then
+        return false
+    end
+
     -- if we have a collision component, check if we can move (sweep test)
     for i, component in ipairs(self.components) do
-        if component:is_a(CollisionComponent) then
+        if is_valid_component(component) and component:is_a(CollisionComponent) then
             if component:can_move(x, y) then
                 self.x = self.x + x
                 self.y = self.y + y
@@ -188,6 +236,10 @@ end
 
 -- teleports the entity to a new position
 function entity:teleport(x, y)
+    if not self.is_valid then
+        return false
+    end
+
     local collision_component = self:find_component_of_type(CollisionComponent)
 
     self.x = x
@@ -199,9 +251,15 @@ function entity:teleport(x, y)
     if collision_component and collision_component.affects_pathfinding then
         world:mark_nav_dirty()
     end
+
+    return true
 end
 
 function entity:get_render_position()
+    if not self.is_valid then
+        return 0, 0
+    end
+
     -- first find the sprite component
     local sprite_comp = self:find_component_of_type(SpriteComponent)
     if sprite_comp then
@@ -213,6 +271,10 @@ function entity:get_render_position()
 end
 
 function entity:get_time_since_creation()
+    if not self.is_valid then
+        return 0
+    end
+
     return love.timer.getTime() - self.entity_creation_time
 end
 

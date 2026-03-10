@@ -18,6 +18,10 @@ function component:new(entity)
 end
 
 function component:destroy()
+    if not self.is_valid then
+        return
+    end
+
     -- remove from list of components
     for i, component in ipairs(self.entity.components) do
         if component == self then

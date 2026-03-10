@@ -15,6 +15,10 @@ local function get_goal_position(goal)
         return nil, nil
     end
 
+    if goal.is_valid ~= nil and not is_valid(goal) then
+        return nil, nil
+    end
+
     return goal.x, goal.y
 end
 
